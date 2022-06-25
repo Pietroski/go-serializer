@@ -1,0 +1,6 @@
+# IDE's configs
+.idea
+.vscode
+
+# vendor
+vendor/
