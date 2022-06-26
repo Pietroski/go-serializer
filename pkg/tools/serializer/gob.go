@@ -38,3 +38,16 @@ func (s *gobSerializer) Deserialize(payload []byte, target interface{}) error {
 
 	return nil
 }
+
+func (s *gobSerializer) DataRebind(payload interface{}, target interface{}) error {
+	bs, err := s.Serialize(payload)
+	if err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	if err = s.Deserialize(bs, target); err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	return nil
+}

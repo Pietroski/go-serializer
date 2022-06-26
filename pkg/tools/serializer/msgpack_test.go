@@ -158,4 +158,69 @@ func TestNewMsgPackSerializer(t *testing.T) {
 		require.Equal(t, payload.StructField.IntFieldLevel1, target.StructField.IntFieldLevel1)
 		require.True(t, payload.StructField.TimeFieldLevel1.Equal(target.StructField.TimeFieldLevel1))
 	})
+
+	t.Run("success rebind - stringified struct", func(t *testing.T) {
+		type TestStructPayload struct {
+			Str string `json:"str"`
+			Num int    `json:"num"`
+		}
+
+		type TestStructDestination struct {
+			Str string `json:"str" validate:"required"`
+			Num int    `json:"num" validate:"required"`
+		}
+		payload := &TestStructPayload{
+			Str: "any-string",
+			Num: 10,
+		}
+		var target TestStructDestination
+
+		s := NewMsgPackSerializer()
+		err := s.DataRebind(payload, &target)
+		require.NoError(t, err)
+		require.Equal(t, target.Str, "any-string")
+		require.Equal(t, target.Num, 10)
+	})
+
+	t.Run("fail rebind serialization - stringified struct", func(t *testing.T) {
+		type TestStructPayload struct {
+			Str  string `json:"str"`
+			Num  int    `json:"num"`
+			Chan chan int
+		}
+
+		type TestStructDestination struct {
+			Str  string   `json:"str" validate:"required"`
+			Num  int      `json:"num" validate:"required"`
+			Chan chan int `json:"my-lil-channel"`
+		}
+		payload := &TestStructPayload{
+			Str:  "any-string",
+			Num:  10,
+			Chan: make(chan int),
+		}
+		var target TestStructDestination
+
+		s := NewMsgPackSerializer()
+		err := s.DataRebind(payload, &target)
+		require.Error(t, err)
+	})
+
+	t.Run("fail rebind serialization - stringified struct", func(t *testing.T) {
+		type TestStructPayload struct {
+			Str string `json:"str"`
+			Num int    `json:"num"`
+		}
+
+		type TestStructDestination int8
+		payload := &TestStructPayload{
+			Str: "any-string",
+			Num: 10,
+		}
+		var target TestStructDestination
+
+		s := NewMsgPackSerializer()
+		err := s.DataRebind(payload, &target)
+		require.Error(t, err)
+	})
 }

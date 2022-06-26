@@ -34,3 +34,16 @@ func (b *jsonBeautifier) Serialize(payload interface{}) ([]byte, error) {
 func (b *jsonBeautifier) Deserialize(payload []byte, target interface{}) error {
 	return b.jsonSerializer.Deserialize(payload, target)
 }
+
+func (s *jsonBeautifier) DataRebind(payload interface{}, target interface{}) error {
+	bs, err := s.Serialize(payload)
+	if err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	if err = s.Deserialize(bs, target); err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	return nil
+}
