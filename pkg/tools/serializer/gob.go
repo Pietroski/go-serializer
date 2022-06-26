@@ -1,4 +1,4 @@
-package serializer
+package go_serializer
 
 import (
 	"bytes"

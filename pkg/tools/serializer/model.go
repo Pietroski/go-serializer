@@ -1,4 +1,4 @@
-package serializer
+package go_serializer
 
 const (
 	EncodeErrMsg = "failed to encode payload - err: %v"
