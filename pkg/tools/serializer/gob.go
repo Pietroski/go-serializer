@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"io"
 
-	error_builder "gitlab.com/pietroski-software-company/watcher/serializer/go-serializer/pkg/tools/builder/errors"
+	error_builder "DataRebindgitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type gobSerializer struct {
