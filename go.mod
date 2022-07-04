@@ -1,4 +1,4 @@
-module DataRebindgitlab.com/pietroski-software-company/tools/serializer/go-serializer
+module gitlab.com/pietroski-software-company/tools/serializer/go-serializer
 
 go 1.18
 

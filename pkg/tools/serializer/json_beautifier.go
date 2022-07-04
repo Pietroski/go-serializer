@@ -3,7 +3,7 @@ package go_serializer
 import (
 	"encoding/json"
 
-	error_builder "DataRebindgitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
+	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type (

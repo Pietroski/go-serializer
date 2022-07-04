@@ -3,7 +3,7 @@ package go_serializer
 import (
 	"github.com/vmihailenco/msgpack/v5"
 
-	error_builder "DataRebindgitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
+	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type msgpackSerializer struct{}
