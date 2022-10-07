@@ -3,6 +3,7 @@ module gitlab.com/pietroski-software-company/tools/serializer/go-serializer
 go 1.18
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.7.5
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 )

@@ -26,6 +26,22 @@ test-unit-cover-all-report: report-dir
 
 ########################################################################################################################
 
+get-mocker:
+	go get -d github.com/golang/mock@v1.6.0
+	go install github.com/golang/mock/mockgen@v1.6.0
+
+## generates mocks
+mock-generate:
+	go get -d github.com/golang/mock/mockgen
+	go mod download
+	go generate ./...
+	go mod tidy
+	go mod download
+
+########################################################################################################################
+
+########################################################################################################################
+
 TAG := $(shell cat VERSION)
 tag:
 	git tag $(TAG)
