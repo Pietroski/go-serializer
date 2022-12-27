@@ -1,7 +1,12 @@
 # Makefile command list
 
+# Makefile Documentation parser
+-include ./scripts/docs/Makefile
+
 # Drone's pipeline validation
 -include .pipelines/.drone/Makefile
+
+########################################################################################################################
 
 report-dir:
 	mkdir -p ./docs/reports/tests/unit/
@@ -40,8 +45,6 @@ mock-generate:
 	go generate ./...
 	go mod tidy
 	go mod download
-
-########################################################################################################################
 
 ########################################################################################################################
 
