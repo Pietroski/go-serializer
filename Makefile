@@ -1,5 +1,8 @@
 # Makefile command list
 
+# Drone's pipeline validation
+-include .pipelines/.drone/Makefile
+
 report-dir:
 	mkdir -p ./docs/reports/tests/unit/
 
