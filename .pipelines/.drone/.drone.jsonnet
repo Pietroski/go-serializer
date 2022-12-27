@@ -25,7 +25,7 @@ local run_tests = [
 	"go test $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)",
 ];
 
-local repo_remote_git_address = 'https://gitlab.com/pietroski-software-company/tools/serializer/go-serializer.git';
+local remote_git_repo_address = 'https://gitlab.com/pietroski-software-company/tools/serializer/go-serializer.git';
 
 local tests_cmd = std.flattenArrays([
 	set_netrc,
@@ -42,7 +42,7 @@ local tests(name, image, envs) = {
 
 local gitlab_push = [
 	"git checkout -b release/merging-branch",
-  "git remote add gitlab "+repo_remote_git_address,
+  "git remote add gitlab "+remote_git_repo_address,
   "git push gitlab release/merging-branch -f",
 ];
 
@@ -54,7 +54,7 @@ local gitlabPushStep(image, envs) = {
 };
 
 local gitlab_tag = [
-  "git remote add gitlab "+repo_remote_git_address,
+  "git remote add gitlab "+remote_git_repo_address,
   "make tag",
   "git push gitlab --tags",
 ];
