@@ -3,7 +3,7 @@
 .vscode
 
 # vendor
-vendor/
+# vendor/
 
 # report files
 drone-analysis
