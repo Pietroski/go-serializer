@@ -13,12 +13,10 @@ local set_netrc = [
 	"chmod 640 ~/.netrc",
 ];
 
-local ptk_modules_download = [
+local set_ptk_envs = [
 	"go env -w GONOSUMDB=gitlab.com/pietroski-software-company",
 	"go env -w GONOPROXY=gitlab.com/pietroski-software-company",
 	"go env -w GOPRIVATE=gitlab.com/pietroski-software-company",
-	"go env -w GO111MODULE=on",
-	"go mod download",
 ];
 
 local run_tests = [
@@ -29,7 +27,7 @@ local remote_git_repo_address = 'https://gitlab.com/pietroski-software-company/t
 
 local tests_cmd = std.flattenArrays([
 	set_netrc,
-	ptk_modules_download,
+	set_ptk_envs,
 	run_tests,
 ]);
 
@@ -101,7 +99,6 @@ local whenTag(step) = step {
 local tagSteps(image, envs) = std.map(whenTag, [
 	tests("test-tag", image, envs),
 	gitlabTagStep(image, envs),
-	// deploy to kluster event
 ]);
 
 local Pipeline(name, image) = {
@@ -115,5 +112,5 @@ local Pipeline(name, image) = {
 };
 
 [
-  Pipeline("go-serializer-pipeline", "golang:1.19.4-alpine3.17"),
+  Pipeline("go-serializer-pipeline", "golang:1.20.2-alpine3.17"),
 ]

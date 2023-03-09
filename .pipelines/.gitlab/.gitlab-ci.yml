@@ -1,6 +1,6 @@
 # GitLab CI/CD
 
-image: golang:1.19.4-alpine3.17
+image: golang:1.20.2-alpine3.17
 variables:
   REMOTE: gitlab.com
   API_REMOTE: api.gitlab.com
@@ -27,8 +27,6 @@ dependency-cache:
     - go env -w GONOSUMDB=gitlab.com/pietroski-software-company
     - go env -w GONOPROXY=gitlab.com/pietroski-software-company
     - go env -w GOPRIVATE=gitlab.com/pietroski-software-company
-    - go env -w GO111MODULE=on
-    - go mod download
 
 unity-tests:
   stage: test
