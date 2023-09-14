@@ -1,13 +1,14 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - feat: io benchmark
  
 # [v1.1.12]
  - feat: added makefile commands
  - refactor: small code clean up
  - feat: added proto serializer
  
-# [v1.1.11, gitea/main]
+# [v1.1.11]
  - chore: drone-analysis
  - chore: vendor deps
  - refactor: pipelines
