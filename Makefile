@@ -6,6 +6,9 @@
 # Drone's pipeline validation
 -include .pipelines/.drone/Makefile
 
+# Schemas's Makefile
+-include ./scripts/schemas/Makefile
+
 ########################################################################################################################
 
 report-dir:
@@ -45,6 +48,11 @@ mock-generate:
 	go generate ./...
 	go mod tidy
 	go mod download
+
+########################################################################################################################
+
+count-written-lines:
+	./scripts/metrics/line-counter
 
 ########################################################################################################################
 

@@ -4,8 +4,9 @@ go 1.20
 
 require (
 	github.com/golang/mock v1.6.0
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.4
 	github.com/vmihailenco/msgpack/v5 v5.3.5
+	google.golang.org/protobuf v1.31.0
 )
 
 require (

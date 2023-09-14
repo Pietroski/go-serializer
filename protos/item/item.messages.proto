@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package item;
+option go_package = "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/protos/schemas/generated/go/pkg/item;grpc_item";
+
+message SubItem {
+  int64 date = 1;
+  int64 amount = 2;
+  string itemCode = 3;
+}
+
+message Item {
+  string id = 1;
+  uint64  itemId = 2;
+  int64 number = 3;
+  SubItem subItem = 6;
+}
+
+message AnotherSubItem {
+  int64 date = 1;
+  int64 amount = 2;
+  string itemCode = 3;
+}
+
+message AnotherItem {
+  string id = 1;
+  uint64  itemId = 2;
+  int64 number = 3;
+  AnotherSubItem subItem = 6;
+}

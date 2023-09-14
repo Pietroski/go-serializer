@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2038
+find . -type f \( -iname "*.go" \
+	! -ipath "./vendor/*" \
+	! -path "./schemas/*" \
+	! -path "*/postgresql/*" \
+	! -path "*/mocks/*" \) | xargs wc -l

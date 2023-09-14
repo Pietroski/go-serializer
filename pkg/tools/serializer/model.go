@@ -1,8 +1,10 @@
 package go_serializer
 
 const (
-	EncodeErrMsg = "failed to encode payload - err: %v"
-	DecodeErrMsg = "failed to decode payload to into target - err: %v"
+	WrongPayloadTypeErrMsg = "wrong payload type"
+	WrongTargetTypeErrMsg  = "wrong target type"
+	EncodeErrMsg           = "failed to encode payload - err: %v"
+	DecodeErrMsg           = "failed to decode payload to into target - err: %v"
 
 	RebinderErrMsg = "failed to rebind data - err: %v"
 )
