@@ -8,6 +8,8 @@ SWAGGER_PATH="$OUTPUT_PATH/swagger"
 declare -a proto_list=(
 	"item"
 	"item-error"
+
+	"data/graph"
 )
 
 for domain in "${proto_list[@]}"; do

@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
+
 	grpc_item "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/generated/go/pkg/item"
 	go_serializer "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer"
 )
@@ -27,5 +29,14 @@ func main() {
 		log.Fatalf("error serializing message - err: %v", err)
 	}
 
-	fmt.Printf("%v", string(bs))
+	fmt.Printf("%v\n\n", string(bs))
+
+	testStr := []byte("test-string")
+	fmt.Println(testStr)
+	fmt.Println(fmt.Sprintf("%s", testStr))
+
+	newUUID, _ := uuid.NewUUID()
+	//testStr := []byte("test-string")
+	//fmt.Println(testStr)
+	fmt.Println(fmt.Sprintf("%s", newUUID))
 }
