@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.12]
  - feat: added makefile commands
  - refactor: small code clean up
  - feat: added proto serializer
