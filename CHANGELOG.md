@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.14]
  - chore: go mod version
  
 # [v1.1.13]
