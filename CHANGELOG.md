@@ -1,6 +1,7 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - chore: go mod version
  
 # [v1.1.13]
  - feat: io benchmark
