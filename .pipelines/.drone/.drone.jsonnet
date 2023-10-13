@@ -112,5 +112,5 @@ local Pipeline(name, image) = {
 };
 
 [
-  Pipeline("go-serializer-pipeline", "golang:1.20.2-alpine3.17"),
+  Pipeline("go-serializer-pipeline", "golang:1.21.2-alpine3.17"),
 ]
