@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.15]
  - chore: deps bump
  
 # [v1.1.14]
