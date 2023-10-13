@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - feat: publish makefile command
+ - chore: pipelines
  
 # [v1.1.15]
  - chore: deps bump
