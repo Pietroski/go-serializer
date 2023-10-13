@@ -101,6 +101,14 @@ gitlab-push-tags:
 
 push-tags: gitea-push-tags gitlab-push-tags
 
+publish:
+	make chore-version-bump
+	make tag
+	make changelog
+	make commit-changelog
+	make changelog
+	make commit-changelog
+
 ########################################################################################################################
 
 count-written-lines:
