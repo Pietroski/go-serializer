@@ -1,6 +1,7 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - chore: deps bump
  
 # [v1.1.14]
  - chore: go mod version
