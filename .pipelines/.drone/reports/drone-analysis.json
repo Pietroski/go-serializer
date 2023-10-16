@@ -10,7 +10,7 @@
         "go env -w GONOSUMDB=gitlab.com/pietroski-software-company",
         "go env -w GONOPROXY=gitlab.com/pietroski-software-company",
         "go env -w GOPRIVATE=gitlab.com/pietroski-software-company",
-        "go test $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
+        "go test -race $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
       ],
       "environment": {
         "GITLAB_ACCESS_TOKEN": {
@@ -41,7 +41,7 @@
         "go env -w GONOSUMDB=gitlab.com/pietroski-software-company",
         "go env -w GONOPROXY=gitlab.com/pietroski-software-company",
         "go env -w GOPRIVATE=gitlab.com/pietroski-software-company",
-        "go test $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
+        "go test -race $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
       ],
       "environment": {
         "GITLAB_ACCESS_TOKEN": {
@@ -98,7 +98,7 @@
         "go env -w GONOSUMDB=gitlab.com/pietroski-software-company",
         "go env -w GONOPROXY=gitlab.com/pietroski-software-company",
         "go env -w GOPRIVATE=gitlab.com/pietroski-software-company",
-        "go test $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
+        "go test -race $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)"
       ],
       "environment": {
         "GITLAB_ACCESS_TOKEN": {

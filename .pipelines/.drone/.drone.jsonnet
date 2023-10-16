@@ -20,7 +20,7 @@ local set_ptk_envs = [
 ];
 
 local run_tests = [
-	"go test $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)",
+	"go test -race $(go list ./... | grep -v /tests/ | grep -v /mocks/ | grep -v /schemas/)",
 ];
 
 local remote_git_repo_address = 'https://gitlab.com/pietroski-software-company/tools/serializer/go-serializer.git';
