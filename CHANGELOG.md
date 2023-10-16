@@ -1,6 +1,7 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - chore: drone pipeline and validation
  
 # [v1.1.16]
  - feat: publish makefile command
