@@ -20,7 +20,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.21.2-alpine3.17",
+      "image": "golang:1.21.3-alpine3.18",
       "name": "test-non-main",
       "when": {
         "branch": {
@@ -51,7 +51,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.21.2-alpine3.17",
+      "image": "golang:1.21.3-alpine3.18",
       "name": "test-main",
       "when": {
         "branch": [
@@ -79,7 +79,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.21.2-alpine3.17",
+      "image": "golang:1.21.3-alpine3.18",
       "name": "gitlab-push",
       "when": {
         "branch": [
@@ -108,7 +108,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.21.2-alpine3.17",
+      "image": "golang:1.21.3-alpine3.18",
       "name": "test-tag",
       "when": {
         "branch": [
@@ -136,7 +136,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.21.2-alpine3.17",
+      "image": "golang:1.21.3-alpine3.18",
       "name": "gitlab-tag",
       "when": {
         "branch": [
