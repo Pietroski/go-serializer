@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.18]
  - chore: drone pipeline and validation
  
 # [v1.1.17]
