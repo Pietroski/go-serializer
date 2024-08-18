@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.19]
  - refactor: mock deps
  
 # [v1.1.18]
