@@ -37,17 +37,26 @@ test-unit-cover-all-report: report-dir
 
 ########################################################################################################################
 
-get-mocker:
-	go get -d github.com/golang/mock@v1.6.0
-	go install github.com/golang/mock/mockgen@v1.6.0
+clean-all-caches:
+	go clean -cache
+	go clean -modcache
+	go clean -testcache
+
+test: clean-all-caches
+	go test -race --tags=unit,test_validation -cover ./...
+
+quick-test:
+	go test -race --tags=unit,test_validation -cover ./...
+
+########################################################################################################################
 
 ## generates mocks
 mock-generate:
-	go get -d github.com/golang/mock/mockgen
-	go mod download
+	go get go.uber.org/mock/mockgen
+	go mod vendor
 	go generate ./...
 	go mod tidy
-	go mod download
+	go mod vendor
 
 ########################################################################################################################
 
@@ -84,13 +93,12 @@ gitlab-push-main:
 push-main-all: gitea-push-main gitlab-push-main
 
 amend:
-	git commit --amend
+	git commit --amend --no-edit
 
 rebase-continue:
 	git rebase --continue
 
-trigger-pipeline:
-	git commit --amend
+trigger-pipeline: amend
 	git push gitea main --force-with-lease
 
 gitea-push-tags:

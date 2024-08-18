@@ -1,4 +1,4 @@
-FROM alpine:3.17.0
+FROM alpine:3.20.2
 
 RUN apk update && apk upgrade && apk add --no-cache ca-certificates curl tar jq
 RUN curl -L https://github.com/harness/drone-cli/releases/latest/download/drone_linux_amd64.tar.gz | tar zx

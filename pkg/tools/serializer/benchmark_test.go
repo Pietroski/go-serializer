@@ -1,3 +1,5 @@
+//go:build unit
+
 package go_serializer
 
 import (
