@@ -1,6 +1,7 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - refactor: mock deps
  
 # [v1.1.18]
  - chore: drone pipeline and validation
@@ -44,7 +45,7 @@
  - refactor: pipeline update
  - feat: drone pipeline checkpoint
  
-# [v1.1.6, gitlab/main, gitlab/HEAD]
+# [v1.1.6]
  - feat: mocks
  
 # [v1.1.4]
