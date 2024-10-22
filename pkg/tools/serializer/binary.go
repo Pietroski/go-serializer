@@ -12,51 +12,15 @@ type (
 	BinarySerializer struct {
 		stringSerializer  stringSerializer
 		booleanSerializer boolSerializer
-		//numericSerializer *numericSerializerTypes
-		ptrSerializer ptrSerializer
+		ptrSerializer     ptrSerializer
 	}
-
-	//numericSerializerTypes struct {
-	//	is     numericSerializer[int64]
-	//	i8s    numericSerializer[int8]
-	//	i16s   numericSerializer[int16]
-	//	i32s   numericSerializer[int32]
-	//	i64s   numericSerializer[int64]
-	//	uis    numericSerializer[uint64]
-	//	ui8s   numericSerializer[uint8]
-	//	ui16s  numericSerializer[uint16]
-	//	ui32s  numericSerializer[uint32]
-	//	ui64s  numericSerializer[uint64]
-	//	f32s   numericSerializer[float32]
-	//	f64s   numericSerializer[float64]
-	//	c64s   numericSerializer[complex64]
-	//	c128s  numericSerializer[complex128]
-	//	uiptrs numericSerializer[uintptr]
-	//}
 )
 
 func NewBinarySerializer() *BinarySerializer {
 	bs := &BinarySerializer{
 		stringSerializer:  &binaryRuneSerializer{},
 		booleanSerializer: &binaryBoolSerializer{},
-		//numericSerializer: &numericSerializerTypes{
-		//	is:     &binaryNumericSerializer[int64]{},
-		//	i8s:    &binaryNumericSerializer[int8]{},
-		//	i16s:   &binaryNumericSerializer[int16]{},
-		//	i32s:   &binaryNumericSerializer[int32]{},
-		//	i64s:   &binaryNumericSerializer[int64]{},
-		//	uis:    &binaryNumericSerializer[uint64]{},
-		//	ui8s:   &binaryNumericSerializer[uint8]{},
-		//	ui16s:  &binaryNumericSerializer[uint16]{},
-		//	ui32s:  &binaryNumericSerializer[uint32]{},
-		//	ui64s:  &binaryNumericSerializer[uint64]{},
-		//	f32s:   &binaryNumericSerializer[float32]{},
-		//	f64s:   &binaryNumericSerializer[float64]{},
-		//	c64s:   &binaryNumericSerializer[complex64]{},
-		//	c128s:  &binaryNumericSerializer[complex128]{},
-		//	uiptrs: &binaryNumericSerializer[uintptr]{},
-		//},
-		ptrSerializer: &binaryPtrSerializer{},
+		ptrSerializer:     &binaryPtrSerializer{},
 	}
 
 	return bs
@@ -322,10 +286,10 @@ func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect
 }
 
 func numericIntDecoder[N numericalInt](
-	bbf *bytes.Buffer, field *reflect.Value, // , ds numericSerializer[N],
+	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i) //binary.Read(bbf, binary.BigEndian, target)
+	err := binary.Read(bbf, binary.BigEndian, &i)
 	//err := ds.decode(bbf, &i)
 	if err != nil {
 		return err
@@ -337,10 +301,10 @@ func numericIntDecoder[N numericalInt](
 }
 
 func numericUintDecoder[N numericalUint](
-	bbf *bytes.Buffer, field *reflect.Value, // , ds numericSerializer[N],
+	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i) // err := ds.decode(bbf, &i)
+	err := binary.Read(bbf, binary.BigEndian, &i)
 	if err != nil {
 		return err
 	}
@@ -351,10 +315,10 @@ func numericUintDecoder[N numericalUint](
 }
 
 func numericFloatDecoder[N numericFloat](
-	bbf *bytes.Buffer, field *reflect.Value, // , ds numericSerializer[N],
+	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i) // err := ds.decode(bbf, &i)
+	err := binary.Read(bbf, binary.BigEndian, &i)
 	if err != nil {
 		return err
 	}
@@ -365,10 +329,10 @@ func numericFloatDecoder[N numericFloat](
 }
 
 func numericComplexDecoder[N numericComplex](
-	bbf *bytes.Buffer, field *reflect.Value, // , ds numericSerializer[N],
+	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i) // err := ds.decode(bbf, &i)
+	err := binary.Read(bbf, binary.BigEndian, &i)
 	if err != nil {
 		return err
 	}
@@ -379,10 +343,10 @@ func numericComplexDecoder[N numericComplex](
 }
 
 func numericUintPtrDecoder[N numericUintPtr](
-	bbf *bytes.Buffer, field *reflect.Value, // , ds numericSerializer[N],
+	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i) // err := ds.decode(bbf, &i)
+	err := binary.Read(bbf, binary.BigEndian, &i)
 	if err != nil {
 		return err
 	}
@@ -394,63 +358,63 @@ func numericUintPtrDecoder[N numericUintPtr](
 
 func (s *BinarySerializer) numericDeserializer(bbf *bytes.Buffer, field *reflect.Value) (err error) {
 	if field.Kind() == reflect.Int {
-		err = numericIntDecoder[int64](bbf, field) //, s.numericSerializer.is)
+		err = numericIntDecoder[int64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Int8 {
-		err = numericIntDecoder[int8](bbf, field) //, s.numericSerializer.i8s)
+		err = numericIntDecoder[int8](bbf, field)
 	}
 
 	if field.Kind() == reflect.Int16 {
-		err = numericIntDecoder[int16](bbf, field) //, s.numericSerializer.i16s)
+		err = numericIntDecoder[int16](bbf, field)
 	}
 
 	if field.Kind() == reflect.Int32 {
-		err = numericIntDecoder[int32](bbf, field) //, s.numericSerializer.i32s)
+		err = numericIntDecoder[int32](bbf, field)
 	}
 
 	if field.Kind() == reflect.Int64 {
-		err = numericIntDecoder[int64](bbf, field) //, s.numericSerializer.i64s)
+		err = numericIntDecoder[int64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uint {
-		err = numericUintDecoder[uint64](bbf, field) //, s.numericSerializer.uis)
+		err = numericUintDecoder[uint64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uint8 {
-		err = numericUintDecoder[uint8](bbf, field) //, s.numericSerializer.ui8s)
+		err = numericUintDecoder[uint8](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uint16 {
-		err = numericUintDecoder[uint16](bbf, field) //, s.numericSerializer.ui16s)
+		err = numericUintDecoder[uint16](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uint32 {
-		err = numericUintDecoder[uint32](bbf, field) //, s.numericSerializer.ui32s)
+		err = numericUintDecoder[uint32](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uint64 {
-		err = numericUintDecoder[uint64](bbf, field) //, s.numericSerializer.ui64s)
+		err = numericUintDecoder[uint64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Float32 {
-		err = numericFloatDecoder[float32](bbf, field) //, s.numericSerializer.f32s)
+		err = numericFloatDecoder[float32](bbf, field)
 	}
 
 	if field.Kind() == reflect.Float64 {
-		err = numericFloatDecoder[float64](bbf, field) //, s.numericSerializer.f64s)
+		err = numericFloatDecoder[float64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Complex64 {
-		err = numericComplexDecoder[complex64](bbf, field) //, s.numericSerializer.c64s)
+		err = numericComplexDecoder[complex64](bbf, field)
 	}
 
 	if field.Kind() == reflect.Complex128 {
-		err = numericComplexDecoder[complex128](bbf, field) //, s.numericSerializer.c128s)
+		err = numericComplexDecoder[complex128](bbf, field)
 	}
 
 	if field.Kind() == reflect.Uintptr {
-		err = numericUintPtrDecoder[uintptr](bbf, field) //, s.numericSerializer.uiptrs)
+		err = numericUintPtrDecoder[uintptr](bbf, field)
 	}
 
 	if err != nil {
@@ -669,23 +633,6 @@ type (
 	numericUintPtr interface {
 		uintptr
 	}
-
-	//numerical interface {
-	//	//int | int8 | int16 | int32 | int64 |
-	//	//	uint | uint8 | uint16 | uint32 | uint64 |
-	//	//	float32 | float64 |
-	//	//	complex64 | complex128 |
-	//	//	uintptr
-	//
-	//	numericalInt | numericalUint | numericFloat | numericComplex | numericUintPtr
-	//}
-
-	//binaryNumericSerializer[N numerical] struct{}
-
-	//numericSerializer[N numerical] interface {
-	//	encode(b N) ([]byte, error)
-	//	decode(bbf *bytes.Buffer, target *N) error
-	//}
 )
 
 func toInt64(v interface{}) int64 {
@@ -793,11 +740,3 @@ func toComplex128(v interface{}) complex128 {
 
 	return 0
 }
-
-//func (s *binaryNumericSerializer[N]) encode(n N) ([]byte, error) {
-//	return binary.Append(nil, binary.BigEndian, n)
-//}
-//
-//func (s *binaryNumericSerializer[N]) decode(bbf *bytes.Buffer, target *N) error {
-//	return binary.Read(bbf, binary.BigEndian, target)
-//}
