@@ -173,54 +173,6 @@ func (s *BinarySerializer) serializePrimitive(bbf *bytes.Buffer, data interface{
 	return fmt.Errorf("invalid type %v - type is not a primitive", reflect.TypeOf(data))
 }
 
-func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value) error {
-	limit := field.NumField()
-	for idx := 0; idx < limit; idx++ {
-		f := field.Field(idx)
-		if f.Kind() == reflect.Ptr {
-			f = f.Elem()
-		}
-
-		if f.Kind() == reflect.Chan {
-			return fmt.Errorf("invalid type %v", f.Kind())
-		}
-
-		if f.Kind() == reflect.Struct {
-			if err := s.structDecode(bbf, &f); err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		if err := s.deserializePrimitive(bbf, &f); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func isPrimitive(target interface{}) bool {
-	switch target.(type) {
-	case int, int8, int16, int32, int64,
-		uint, uint8, uint16, uint32, uint64,
-		float32, float64,
-		complex64, complex128,
-		uintptr,
-		*int, *int8, *int16, *int32, *int64,
-		*uint, *uint8, *uint16, *uint32, *uint64,
-		*float32, *float64,
-		*complex64, *complex128,
-		*uintptr,
-		string, *string,
-		bool, *bool:
-		return true
-	default:
-		return false
-	}
-}
-
 func (s *BinarySerializer) deserializePrimitive(bbf *bytes.Buffer, field *reflect.Value) error {
 	switch field.Kind() {
 	case reflect.String:
@@ -376,6 +328,54 @@ func (s *BinarySerializer) deserializePrimitive(bbf *bytes.Buffer, field *reflec
 		return nil
 	default:
 		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
+	}
+}
+
+func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value) error {
+	limit := field.NumField()
+	for idx := 0; idx < limit; idx++ {
+		f := field.Field(idx)
+		if f.Kind() == reflect.Ptr {
+			f = f.Elem()
+		}
+
+		if f.Kind() == reflect.Chan {
+			return fmt.Errorf("invalid type %v", f.Kind())
+		}
+
+		if f.Kind() == reflect.Struct {
+			if err := s.structDecode(bbf, &f); err != nil {
+				return err
+			}
+
+			continue
+		}
+
+		if err := s.deserializePrimitive(bbf, &f); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func isPrimitive(target interface{}) bool {
+	switch target.(type) {
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64,
+		complex64, complex128,
+		uintptr,
+		*int, *int8, *int16, *int32, *int64,
+		*uint, *uint8, *uint16, *uint32, *uint64,
+		*float32, *float64,
+		*complex64, *complex128,
+		*uintptr,
+		string, *string,
+		bool, *bool:
+		return true
+	default:
+		return false
 	}
 }
 
