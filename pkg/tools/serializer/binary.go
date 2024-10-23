@@ -10,17 +10,17 @@ import (
 
 type (
 	BinarySerializer struct {
-		stringSerializer  stringSerializer
-		booleanSerializer boolSerializer
-		ptrSerializer     ptrSerializer
+		stringSerializer stringSerializer
+		//booleanSerializer boolSerializer
+		ptrSerializer ptrSerializer
 	}
 )
 
 func NewBinarySerializer() *BinarySerializer {
 	bs := &BinarySerializer{
-		stringSerializer:  &binaryRuneSerializer{},
-		booleanSerializer: &binaryBoolSerializer{},
-		ptrSerializer:     &binaryPtrSerializer{},
+		stringSerializer: &binaryRuneSerializer{}, // &binaryBytesSerializer{}, // &binaryRuneSerializer{},
+		//booleanSerializer: &binaryBoolSerializer{},
+		ptrSerializer: &binaryPtrSerializer{},
 	}
 
 	return bs
@@ -53,13 +53,13 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 		return eBs, nil
 	}
 
-	var bs []byte
 	vofd := reflect.ValueOf(data)
 	if vofd.Kind() == reflect.Ptr {
 		vofd = vofd.Elem()
 	}
 
 	limit := vofd.NumField()
+	var bs []byte // bs := make([]byte, 0, limit*limit)
 	for idx := 0; idx < limit; idx++ {
 		field := vofd.Field(idx)
 		if field.Kind() == reflect.Chan {
@@ -94,6 +94,7 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 			}
 
 			bs = append(bs, eBs...)
+			continue
 		}
 
 		eBs, err := s.serializePrimitive(field.Interface())
@@ -108,50 +109,44 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 }
 
 func (s *BinarySerializer) serializePrimitive(data interface{}) ([]byte, error) {
-	var bs []byte
-	var err error
-
 	switch v := data.(type) {
 	case bool:
-		bs, err = s.booleanSerializer.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case string:
-		bs, err = s.stringSerializer.encode(v)
+		return s.stringSerializer.encode(v)
 	case int:
-		bs, err = binary.Append(nil, binary.BigEndian, int64(v)) // s.numericSerializer.is.encode(int64(v))
+		return binary.Append(nil, binary.BigEndian, int64(v))
 	case int8:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.i8s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case int16:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.i16s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case int32:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.i32s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case int64:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.i64s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case uint:
-		bs, err = binary.Append(nil, binary.BigEndian, uint64(v)) // s.numericSerializer.uis.encode(uint64(v))
+		return binary.Append(nil, binary.BigEndian, uint64(v))
 	case uint8:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.ui8s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case uint16:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.ui16s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case uint32:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.ui32s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case uint64:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.ui64s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case float32:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.f32s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case float64:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.f64s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case complex64:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.c64s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case complex128:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.c128s.encode(v)
+		return binary.Append(nil, binary.BigEndian, v)
 	case uintptr:
-		bs, err = binary.Append(nil, binary.BigEndian, v) // s.numericSerializer.uiptrs.encode(v)
-	}
-	if err != nil {
-		return nil, err
+		return binary.Append(nil, binary.BigEndian, v)
 	}
 
-	return bs, nil
+	return []byte{}, fmt.Errorf("invalid type %v - type is not a primitive", reflect.TypeOf(data))
 }
 
 func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
@@ -190,8 +185,7 @@ func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 		}
 
 		if field.Kind() == reflect.Struct {
-			err := s.structDecode(bbf, &field)
-			if err != nil {
+			if err := s.structDecode(bbf, &field); err != nil {
 				return err
 			}
 
@@ -219,8 +213,7 @@ func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value)
 		}
 
 		if f.Kind() == reflect.Struct {
-			err := s.structDecode(bbf, &f)
-			if err != nil {
+			if err := s.structDecode(bbf, &f); err != nil {
 				return err
 			}
 
@@ -256,7 +249,33 @@ func isPrimitive(target interface{}) bool {
 }
 
 func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect.Value) error {
-	if field.Kind() == reflect.String {
+	//if field.Kind() == reflect.String {
+	//	var str string
+	//	err := s.stringSerializer.decode(bbf, &str)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	field.SetString(str)
+	//	return nil
+	//}
+	//
+	//if field.Kind() == reflect.Bool {
+	//	var b bool
+	//	if err := binary.Read(bbf, binary.BigEndian, &b); err != nil {
+	//		return err
+	//	}
+	//
+	//	field.SetBool(b)
+	//	return nil
+	//}
+
+	//if err := s.numericDeserializer(bbf, field); err != nil {
+	//	return err
+	//}
+
+	switch field.Kind() {
+	case reflect.String:
 		var str string
 		err := s.stringSerializer.decode(bbf, &str)
 		if err != nil {
@@ -265,21 +284,46 @@ func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect
 
 		field.SetString(str)
 		return nil
-	}
-
-	if field.Kind() == reflect.Bool {
+	case reflect.Bool:
 		var b bool
-		err := s.booleanSerializer.decode(bbf, &b)
-		if err != nil {
+		if err := binary.Read(bbf, binary.BigEndian, &b); err != nil {
 			return err
 		}
 
 		field.SetBool(b)
 		return nil
-	}
-
-	if err := s.numericDeserializer(bbf, field); err != nil {
-		return err
+	case reflect.Int:
+		return numericIntDecoder[int64](bbf, field)
+	case reflect.Int8:
+		return numericIntDecoder[int8](bbf, field)
+	case reflect.Int16:
+		return numericIntDecoder[int16](bbf, field)
+	case reflect.Int32:
+		return numericIntDecoder[int32](bbf, field)
+	case reflect.Int64:
+		return numericIntDecoder[int64](bbf, field)
+	case reflect.Uint:
+		return numericUintDecoder[uint64](bbf, field)
+	case reflect.Uint8:
+		return numericUintDecoder[uint8](bbf, field)
+	case reflect.Uint16:
+		return numericUintDecoder[uint16](bbf, field)
+	case reflect.Uint32:
+		return numericUintDecoder[uint32](bbf, field)
+	case reflect.Uint64:
+		return numericUintDecoder[uint64](bbf, field)
+	case reflect.Float32:
+		return numericFloatDecoder[float32](bbf, field)
+	case reflect.Float64:
+		return numericFloatDecoder[float64](bbf, field)
+	case reflect.Complex64:
+		return numericComplexDecoder[complex64](bbf, field)
+	case reflect.Complex128:
+		return numericComplexDecoder[complex128](bbf, field)
+	case reflect.Uintptr:
+		return numericUintPtrDecoder[uintptr](bbf, field)
+	default:
+		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
 	}
 
 	return nil
@@ -289,9 +333,7 @@ func numericIntDecoder[N numericalInt](
 	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i)
-	//err := ds.decode(bbf, &i)
-	if err != nil {
+	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
 		return err
 	}
 
@@ -304,8 +346,7 @@ func numericUintDecoder[N numericalUint](
 	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i)
-	if err != nil {
+	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
 		return err
 	}
 
@@ -318,8 +359,7 @@ func numericFloatDecoder[N numericFloat](
 	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i)
-	if err != nil {
+	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
 		return err
 	}
 
@@ -332,8 +372,7 @@ func numericComplexDecoder[N numericComplex](
 	bbf *bytes.Buffer, field *reflect.Value,
 ) error {
 	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i)
-	if err != nil {
+	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
 		return err
 	}
 
@@ -357,71 +396,40 @@ func numericUintPtrDecoder[N numericUintPtr](
 }
 
 func (s *BinarySerializer) numericDeserializer(bbf *bytes.Buffer, field *reflect.Value) (err error) {
-	if field.Kind() == reflect.Int {
-		err = numericIntDecoder[int64](bbf, field)
+	switch field.Kind() {
+	case reflect.Int:
+		return numericIntDecoder[int64](bbf, field)
+	case reflect.Int8:
+		return numericIntDecoder[int8](bbf, field)
+	case reflect.Int16:
+		return numericIntDecoder[int16](bbf, field)
+	case reflect.Int32:
+		return numericIntDecoder[int32](bbf, field)
+	case reflect.Int64:
+		return numericIntDecoder[int64](bbf, field)
+	case reflect.Uint:
+		return numericUintDecoder[uint64](bbf, field)
+	case reflect.Uint8:
+		return numericUintDecoder[uint8](bbf, field)
+	case reflect.Uint16:
+		return numericUintDecoder[uint16](bbf, field)
+	case reflect.Uint32:
+		return numericUintDecoder[uint32](bbf, field)
+	case reflect.Uint64:
+		return numericUintDecoder[uint64](bbf, field)
+	case reflect.Float32:
+		return numericFloatDecoder[float32](bbf, field)
+	case reflect.Float64:
+		return numericFloatDecoder[float64](bbf, field)
+	case reflect.Complex64:
+		return numericComplexDecoder[complex64](bbf, field)
+	case reflect.Complex128:
+		return numericComplexDecoder[complex128](bbf, field)
+	case reflect.Uintptr:
+		return numericUintPtrDecoder[uintptr](bbf, field)
+	default:
+		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
 	}
-
-	if field.Kind() == reflect.Int8 {
-		err = numericIntDecoder[int8](bbf, field)
-	}
-
-	if field.Kind() == reflect.Int16 {
-		err = numericIntDecoder[int16](bbf, field)
-	}
-
-	if field.Kind() == reflect.Int32 {
-		err = numericIntDecoder[int32](bbf, field)
-	}
-
-	if field.Kind() == reflect.Int64 {
-		err = numericIntDecoder[int64](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uint {
-		err = numericUintDecoder[uint64](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uint8 {
-		err = numericUintDecoder[uint8](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uint16 {
-		err = numericUintDecoder[uint16](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uint32 {
-		err = numericUintDecoder[uint32](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uint64 {
-		err = numericUintDecoder[uint64](bbf, field)
-	}
-
-	if field.Kind() == reflect.Float32 {
-		err = numericFloatDecoder[float32](bbf, field)
-	}
-
-	if field.Kind() == reflect.Float64 {
-		err = numericFloatDecoder[float64](bbf, field)
-	}
-
-	if field.Kind() == reflect.Complex64 {
-		err = numericComplexDecoder[complex64](bbf, field)
-	}
-
-	if field.Kind() == reflect.Complex128 {
-		err = numericComplexDecoder[complex128](bbf, field)
-	}
-
-	if field.Kind() == reflect.Uintptr {
-		err = numericUintPtrDecoder[uintptr](bbf, field)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type (
@@ -435,13 +443,9 @@ type (
 )
 
 func (s *binaryBytesSerializer) encode(str string) ([]byte, error) {
-	var bs []byte
+	bs := []byte(str)
 
-	for _, c := range str {
-		bs = append(bs, byte(c))
-	}
-
-	buf := make([]byte, 0)
+	buf := make([]byte, 0, cap(bs)*4)
 	var err error
 	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(bs)))
 	if err != nil {
@@ -458,34 +462,27 @@ func (s *binaryBytesSerializer) encode(str string) ([]byte, error) {
 	return buf, nil
 }
 
-func (s *binaryBytesSerializer) decode(bbf *bytes.Buffer, target interface{}) error {
+func (s *binaryBytesSerializer) decode(bbf *bytes.Buffer, target *string) error {
 	var length uint64
 	err := binary.Read(bbf, binary.BigEndian, &length)
 	if err != nil {
 		return err
 	}
 
-	var bs []byte
+	bs := make([]byte, length)
 	for i := uint64(0); i < length; i++ {
-		var b byte
-		err = binary.Read(bbf, binary.BigEndian, &b)
+		err = binary.Read(bbf, binary.BigEndian, &bs[i])
 		if err != nil {
 			return err
 		}
-
-		bs = append(bs, b)
 	}
 
-	var str string
+	strBuilder := &strings.Builder{}
 	for _, b := range bs {
-		str += string(b)
+		strBuilder.WriteString(string(b))
 	}
 
-	ts, ok := target.(*string)
-	if !ok {
-		return fmt.Errorf("target is not a string pointer")
-	}
-	*ts = str
+	*target = strBuilder.String()
 
 	return nil
 }
@@ -493,7 +490,7 @@ func (s *binaryBytesSerializer) decode(bbf *bytes.Buffer, target interface{}) er
 func (s *binaryRuneSerializer) encode(str string) ([]byte, error) {
 	rs := []rune(str)
 
-	buf := make([]byte, 0, cap(rs)+8)
+	buf := make([]byte, 0, cap(rs)*2) // cap(rs)*2 // (cap(rs)*4)+8
 	var err error
 	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(rs)))
 	if err != nil {
@@ -531,43 +528,6 @@ func (s *binaryRuneSerializer) decode(bbf *bytes.Buffer, target *string) error {
 	}
 
 	*target = strBuilder.String()
-
-	return nil
-}
-
-type (
-	binaryBoolSerializer struct{}
-
-	boolSerializer interface {
-		encode(b bool) ([]byte, error)
-		decode(bbf *bytes.Buffer, target *bool) error
-	}
-)
-
-func (s *binaryBoolSerializer) encode(b bool) ([]byte, error) {
-	num := uint8(0)
-	if b {
-		num = 1
-	}
-
-	var bs []byte
-	bs, err := binary.Append(bs, binary.BigEndian, num)
-	if err != nil {
-		return nil, err
-	}
-
-	return bs, nil
-}
-
-func (s *binaryBoolSerializer) decode(bbf *bytes.Buffer, target *bool) error {
-	var boolean bool
-
-	err := binary.Read(bbf, binary.BigEndian, &boolean)
-	if err != nil {
-		return err
-	}
-
-	*target = boolean
 
 	return nil
 }
