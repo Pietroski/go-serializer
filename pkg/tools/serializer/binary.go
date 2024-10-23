@@ -11,16 +11,14 @@ import (
 type (
 	BinarySerializer struct {
 		stringSerializer stringSerializer
-		//booleanSerializer boolSerializer
-		ptrSerializer ptrSerializer
+		ptrSerializer    ptrSerializer
 	}
 )
 
 func NewBinarySerializer() *BinarySerializer {
 	bs := &BinarySerializer{
-		stringSerializer: &binaryRuneSerializer{}, // &binaryBytesSerializer{}, // &binaryRuneSerializer{},
-		//booleanSerializer: &binaryBoolSerializer{},
-		ptrSerializer: &binaryPtrSerializer{},
+		stringSerializer: &binaryRuneSerializer{},
+		ptrSerializer:    &binaryPtrSerializer{},
 	}
 
 	return bs
@@ -39,8 +37,7 @@ func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
 }
 
 func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
-	bbf := bytes.NewBuffer(data)
-	return s.decode(bbf, target)
+	return s.decode(bytes.NewBuffer(data), target)
 }
 
 func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
@@ -177,10 +174,9 @@ func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 			}
 			if isNull {
 				continue
-			} else {
-				field.Set(reflect.New(field.Type().Elem()))
 			}
 
+			field.Set(reflect.New(field.Type().Elem()))
 			field = field.Elem()
 		}
 
@@ -381,7 +377,7 @@ type (
 func (s *binaryBytesSerializer) encode(str string) ([]byte, error) {
 	bs := []byte(str)
 
-	buf := make([]byte, 0, cap(bs)*4)
+	buf := make([]byte, 0, cap(bs)+8)
 	var err error
 	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(bs)))
 	if err != nil {
@@ -426,7 +422,7 @@ func (s *binaryBytesSerializer) decode(bbf *bytes.Buffer, target *string) error 
 func (s *binaryRuneSerializer) encode(str string) ([]byte, error) {
 	rs := []rune(str)
 
-	buf := make([]byte, 0, cap(rs)*2) // cap(rs)*2 // (cap(rs)*4)+8
+	buf := make([]byte, 0, cap(rs)+8)
 	var err error
 	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(rs)))
 	if err != nil {
@@ -478,18 +474,12 @@ type (
 )
 
 func (s *binaryPtrSerializer) preEncode(isNull bool) ([]byte, error) {
-	var bs []byte
-	var err error
+	bs := make([]byte, 0, 8)
 	if isNull {
-		bs, err = binary.Append(bs, binary.BigEndian, byte(1))
-	} else {
-		bs, err = binary.Append(bs, binary.BigEndian, byte(0))
-	}
-	if err != nil {
-		return nil, err
+		return binary.Append(bs, binary.BigEndian, byte(1))
 	}
 
-	return bs, nil
+	return binary.Append(bs, binary.BigEndian, byte(0))
 }
 
 func (s *binaryPtrSerializer) preDecode(bbf *bytes.Buffer, field *reflect.Value) (isNull bool, err error) {
@@ -499,14 +489,7 @@ func (s *binaryPtrSerializer) preDecode(bbf *bytes.Buffer, field *reflect.Value)
 		return
 	}
 
-	if isItNull == 1 {
-		field.Set(reflect.Zero(field.Type()))
-
-		isNull = true
-		return
-	}
-
-	return
+	return isItNull == 1, nil // field.Set(reflect.Zero(field.Type()))
 }
 
 type (
