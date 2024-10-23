@@ -9,15 +9,11 @@ import (
 )
 
 type (
-	BinarySerializer struct {
-		stringSerializer stringSerializer
-	}
+	BinarySerializer struct{}
 )
 
 func NewBinarySerializer() *BinarySerializer {
-	bs := &BinarySerializer{
-		stringSerializer: &binaryRuneSerializer{},
-	}
+	bs := &BinarySerializer{}
 
 	return bs
 }
@@ -31,14 +27,6 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 }
 
 func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
-	return s.encode(data)
-}
-
-func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
-	return s.decode(bytes.NewBuffer(data), target)
-}
-
-func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 	if isPrimitive(data) {
 		return s.serializePrimitive(data)
 	}
@@ -49,7 +37,7 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 	}
 
 	limit := vofd.NumField()
-	bs := make([]byte, 0, limit<<3) // limit * 8
+	bb := &bytes.Buffer{}
 	for idx := 0; idx < limit; idx++ {
 		field := vofd.Field(idx)
 		if field.Kind() == reflect.Chan {
@@ -57,33 +45,34 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 		}
 
 		if field.Kind() == reflect.Ptr {
+			bs := make([]byte, 0, 8)
 			if field.IsNil() {
-				eBs, err := binary.Append(nil, binary.BigEndian, byte(1))
+				eBs, err := binary.Append(bs, binary.BigEndian, byte(1))
 				if err != nil {
 					return nil, err
 				}
 
-				bs = append(bs, eBs...)
+				bb.Write(eBs)
 				continue
 			}
 
-			eBs, err := binary.Append(nil, binary.BigEndian, byte(0))
+			eBs, err := binary.Append(bs, binary.BigEndian, byte(0))
 			if err != nil {
 				return nil, err
 			}
 
-			bs = append(bs, eBs...)
+			bb.Write(eBs)
 
 			field = field.Elem()
 		}
 
 		if field.Kind() == reflect.Struct {
-			eBs, err := s.encode(field.Interface())
+			eBs, err := s.Marshal(field.Interface())
 			if err != nil {
 				return nil, err
 			}
 
-			bs = append(bs, eBs...)
+			bb.Write(eBs)
 
 			continue
 		}
@@ -93,55 +82,15 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 			return nil, err
 		}
 
-		bs = append(bs, eBs...)
+		bb.Write(eBs)
 	}
 
-	return bs, nil
+	return bb.Bytes(), nil
 }
 
-func (s *BinarySerializer) serializePrimitive(data interface{}) ([]byte, error) {
-	bs := make([]byte, 0, 8)
-	switch v := data.(type) {
-	case bool:
-		return binary.Append(bs, binary.BigEndian, v)
-	case string:
-		return s.stringSerializer.encode(v)
-	case int:
-		return binary.Append(bs, binary.BigEndian, int64(v))
-	case int8:
-		return binary.Append(bs, binary.BigEndian, v)
-	case int16:
-		return binary.Append(bs, binary.BigEndian, v)
-	case int32:
-		return binary.Append(bs, binary.BigEndian, v)
-	case int64:
-		return binary.Append(bs, binary.BigEndian, v)
-	case uint:
-		return binary.Append(bs, binary.BigEndian, uint64(v))
-	case uint8:
-		return binary.Append(bs, binary.BigEndian, v)
-	case uint16:
-		return binary.Append(bs, binary.BigEndian, v)
-	case uint32:
-		return binary.Append(bs, binary.BigEndian, v)
-	case uint64:
-		return binary.Append(bs, binary.BigEndian, v)
-	case float32:
-		return binary.Append(bs, binary.BigEndian, v)
-	case float64:
-		return binary.Append(bs, binary.BigEndian, v)
-	case complex64:
-		return binary.Append(bs, binary.BigEndian, v)
-	case complex128:
-		return binary.Append(bs, binary.BigEndian, v)
-	case uintptr:
-		return binary.Append(bs, binary.BigEndian, v)
-	}
+func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
+	bbf := bytes.NewBuffer(data)
 
-	return []byte{}, fmt.Errorf("invalid type %v - type is not a primitive", reflect.TypeOf(data))
-}
-
-func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 	voft := reflect.ValueOf(target)
 	if voft.Kind() == reflect.Ptr {
 		voft = voft.Elem()
@@ -185,6 +134,48 @@ func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 	}
 
 	return nil
+}
+
+func (s *BinarySerializer) serializePrimitive(data interface{}) ([]byte, error) {
+	bs := make([]byte, 0, 8)
+	switch v := data.(type) {
+	case bool:
+		return binary.Append(bs, binary.BigEndian, v)
+	case string:
+		return encodeRune(v)
+	case int:
+		return binary.Append(bs, binary.BigEndian, int64(v))
+	case int8:
+		return binary.Append(bs, binary.BigEndian, v)
+	case int16:
+		return binary.Append(bs, binary.BigEndian, v)
+	case int32:
+		return binary.Append(bs, binary.BigEndian, v)
+	case int64:
+		return binary.Append(bs, binary.BigEndian, v)
+	case uint:
+		return binary.Append(bs, binary.BigEndian, uint64(v))
+	case uint8:
+		return binary.Append(bs, binary.BigEndian, v)
+	case uint16:
+		return binary.Append(bs, binary.BigEndian, v)
+	case uint32:
+		return binary.Append(bs, binary.BigEndian, v)
+	case uint64:
+		return binary.Append(bs, binary.BigEndian, v)
+	case float32:
+		return binary.Append(bs, binary.BigEndian, v)
+	case float64:
+		return binary.Append(bs, binary.BigEndian, v)
+	case complex64:
+		return binary.Append(bs, binary.BigEndian, v)
+	case complex128:
+		return binary.Append(bs, binary.BigEndian, v)
+	case uintptr:
+		return binary.Append(bs, binary.BigEndian, v)
+	}
+
+	return nil, fmt.Errorf("invalid type %v - type is not a primitive", reflect.TypeOf(data))
 }
 
 func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value) error {
@@ -239,7 +230,7 @@ func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect
 	switch field.Kind() {
 	case reflect.String:
 		var str string
-		if err := s.stringSerializer.decode(bbf, &str); err != nil {
+		if err := decodeRune(bbf, &str); err != nil {
 			return err
 		}
 
@@ -354,82 +345,23 @@ func numericUintPtrDecoder[N numericUintPtr](
 	return nil
 }
 
-type (
-	binaryBytesSerializer struct{} // stringToBytes | binaryFromBytesToString
-	binaryRuneSerializer  struct{} // stringToRune | binaryFromRuneToString
-
-	stringSerializer interface {
-		encode(str string) ([]byte, error)
-		decode(bbf *bytes.Buffer, target *string) error
-	}
-)
-
-func (s *binaryBytesSerializer) encode(str string) ([]byte, error) {
-	bs := []byte(str)
-
-	buf := make([]byte, 0, cap(bs)+8)
-	var err error
-	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(bs)))
-	if err != nil {
-		return nil, err
-	}
-
-	for _, b := range bs {
-		buf, err = binary.Append(buf, binary.BigEndian, b)
-		if err != nil {
-			return buf, nil
-		}
-	}
-
-	return buf, nil
-}
-
-func (s *binaryBytesSerializer) decode(bbf *bytes.Buffer, target *string) error {
-	var length uint64
-	err := binary.Read(bbf, binary.BigEndian, &length)
-	if err != nil {
-		return err
-	}
-
-	bs := make([]byte, length)
-	for i := uint64(0); i < length; i++ {
-		err = binary.Read(bbf, binary.BigEndian, &bs[i])
-		if err != nil {
-			return err
-		}
-	}
-
-	strBuilder := &strings.Builder{}
-	for _, b := range bs {
-		strBuilder.WriteString(string(b))
-	}
-
-	*target = strBuilder.String()
-
-	return nil
-}
-
-func (s *binaryRuneSerializer) encode(str string) ([]byte, error) {
+func encodeRune(str string) ([]byte, error) {
 	rs := []rune(str)
 
 	buf := make([]byte, 0, cap(rs)<<1)
-	var err error
-	buf, err = binary.Append(buf, binary.BigEndian, uint64(len(rs)))
+	buf, err := binary.Append(buf, binary.BigEndian, uint64(len(rs)))
 	if err != nil {
 		return nil, err
 	}
 
-	for _, r := range rs {
-		buf, err = binary.Append(buf, binary.BigEndian, r)
-		if err != nil {
-			return buf, nil
-		}
+	if buf, err = binary.Append(buf, binary.BigEndian, rs); err != nil {
+		return nil, nil
 	}
 
 	return buf, nil
 }
 
-func (s *binaryRuneSerializer) decode(bbf *bytes.Buffer, target *string) error {
+func decodeRune(bbf *bytes.Buffer, target *string) error {
 	var length uint64
 	if err := binary.Read(bbf, binary.BigEndian, &length); err != nil {
 		return err
@@ -444,7 +376,7 @@ func (s *binaryRuneSerializer) decode(bbf *bytes.Buffer, target *string) error {
 
 	strBuilder := &strings.Builder{}
 	for _, r := range rs {
-		strBuilder.WriteString(string(r))
+		strBuilder.WriteRune(r)
 	}
 
 	*target = strBuilder.String()
