@@ -9,11 +9,15 @@ import (
 )
 
 type (
-	BinarySerializer struct{}
+	BinarySerializer struct {
+		byteOrder binary.ByteOrder
+	}
 )
 
 func NewBinarySerializer() *BinarySerializer {
-	bs := &BinarySerializer{}
+	bs := &BinarySerializer{
+		byteOrder: binary.LittleEndian,
+	}
 
 	return bs
 }
