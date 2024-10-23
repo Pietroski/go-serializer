@@ -11,14 +11,12 @@ import (
 type (
 	BinarySerializer struct {
 		stringSerializer stringSerializer
-		ptrSerializer    ptrSerializer
 	}
 )
 
 func NewBinarySerializer() *BinarySerializer {
 	bs := &BinarySerializer{
 		stringSerializer: &binaryRuneSerializer{},
-		ptrSerializer:    &binaryPtrSerializer{},
 	}
 
 	return bs
@@ -42,12 +40,7 @@ func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
 
 func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 	if isPrimitive(data) {
-		eBs, err := s.serializePrimitive(data)
-		if err != nil {
-			return nil, err
-		}
-
-		return eBs, nil
+		return s.serializePrimitive(data)
 	}
 
 	vofd := reflect.ValueOf(data)
@@ -56,7 +49,7 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 	}
 
 	limit := vofd.NumField()
-	var bs []byte // bs := make([]byte, 0, limit*limit)
+	bs := make([]byte, 0, limit*8)
 	for idx := 0; idx < limit; idx++ {
 		field := vofd.Field(idx)
 		if field.Kind() == reflect.Chan {
@@ -64,8 +57,9 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 		}
 
 		if field.Kind() == reflect.Ptr {
+			eBs := make([]byte, 0, 8)
 			if field.IsNil() {
-				eBs, err := s.ptrSerializer.preEncode(true)
+				eBs, err := binary.Append(eBs, binary.BigEndian, byte(1))
 				if err != nil {
 					return nil, err
 				}
@@ -74,7 +68,7 @@ func (s *BinarySerializer) encode(data interface{}) ([]byte, error) {
 				continue
 			}
 
-			eBs, err := s.ptrSerializer.preEncode(false)
+			eBs, err := binary.Append(eBs, binary.BigEndian, byte(0))
 			if err != nil {
 				return nil, err
 			}
@@ -153,11 +147,7 @@ func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 	}
 
 	if isPrimitive(target) {
-		if err := s.decodePrimitiveType(bbf, &voft); err != nil {
-			return err
-		}
-
-		return nil
+		return s.decodePrimitiveType(bbf, &voft)
 	}
 
 	limit := voft.NumField()
@@ -168,11 +158,11 @@ func (s *BinarySerializer) decode(bbf *bytes.Buffer, target interface{}) error {
 		}
 
 		if field.Kind() == reflect.Ptr {
-			isNull, err := s.ptrSerializer.preDecode(bbf, &field)
-			if err != nil {
+			var isItNull byte
+			if err := binary.Read(bbf, binary.BigEndian, &isItNull); err != nil {
 				return err
 			}
-			if isNull {
+			if isItNull == 1 {
 				continue
 			}
 
@@ -462,34 +452,6 @@ func (s *binaryRuneSerializer) decode(bbf *bytes.Buffer, target *string) error {
 	*target = strBuilder.String()
 
 	return nil
-}
-
-type (
-	binaryPtrSerializer struct{}
-
-	ptrSerializer interface {
-		preEncode(isNull bool) ([]byte, error)
-		preDecode(bbf *bytes.Buffer, field *reflect.Value) (isNull bool, err error)
-	}
-)
-
-func (s *binaryPtrSerializer) preEncode(isNull bool) ([]byte, error) {
-	bs := make([]byte, 0, 8)
-	if isNull {
-		return binary.Append(bs, binary.BigEndian, byte(1))
-	}
-
-	return binary.Append(bs, binary.BigEndian, byte(0))
-}
-
-func (s *binaryPtrSerializer) preDecode(bbf *bytes.Buffer, field *reflect.Value) (isNull bool, err error) {
-	var isItNull byte
-	err = binary.Read(bbf, binary.BigEndian, &isItNull)
-	if err != nil {
-		return
-	}
-
-	return isItNull == 1, nil // field.Set(reflect.Zero(field.Type()))
 }
 
 type (
