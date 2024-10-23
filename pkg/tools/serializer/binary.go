@@ -47,7 +47,7 @@ func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
 		if field.Kind() == reflect.Ptr {
 			bs := make([]byte, 0, 8)
 			if field.IsNil() {
-				eBs, err := binary.Append(bs, binary.BigEndian, byte(1))
+				eBs, err := binary.Append(bs, binary.LittleEndian, byte(1))
 				if err != nil {
 					return nil, err
 				}
@@ -56,7 +56,7 @@ func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
 				continue
 			}
 
-			eBs, err := binary.Append(bs, binary.BigEndian, byte(0))
+			eBs, err := binary.Append(bs, binary.LittleEndian, byte(0))
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +109,7 @@ func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
 
 		if field.Kind() == reflect.Ptr {
 			var isItNull byte
-			if err := binary.Read(bbf, binary.BigEndian, &isItNull); err != nil {
+			if err := binary.Read(bbf, binary.LittleEndian, &isItNull); err != nil {
 				return err
 			}
 			if isItNull == 1 {
@@ -140,39 +140,39 @@ func (s *BinarySerializer) serializePrimitive(data interface{}) ([]byte, error) 
 	bs := make([]byte, 0, 8)
 	switch v := data.(type) {
 	case bool:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case string:
 		return encodeRune(v)
 	case int:
-		return binary.Append(bs, binary.BigEndian, int64(v))
+		return binary.Append(bs, binary.LittleEndian, int64(v))
 	case int8:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case int16:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case int32:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case int64:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case uint:
-		return binary.Append(bs, binary.BigEndian, uint64(v))
+		return binary.Append(bs, binary.LittleEndian, uint64(v))
 	case uint8:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case uint16:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case uint32:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case uint64:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case float32:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case float64:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case complex64:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case complex128:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	case uintptr:
-		return binary.Append(bs, binary.BigEndian, v)
+		return binary.Append(bs, binary.LittleEndian, v)
 	}
 
 	return nil, fmt.Errorf("invalid type %v - type is not a primitive", reflect.TypeOf(data))
@@ -238,123 +238,162 @@ func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect
 		return nil
 	case reflect.Bool:
 		var b bool
-		if err := binary.Read(bbf, binary.BigEndian, &b); err != nil {
+		if err := binary.Read(bbf, binary.LittleEndian, &b); err != nil {
 			return err
 		}
 
 		field.SetBool(b)
 		return nil
 	case reflect.Int:
-		return numericIntDecoder[int64](bbf, field)
+		var i int64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(i)
+
+		return nil
 	case reflect.Int8:
-		return numericIntDecoder[int8](bbf, field)
+		var i int8
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(int64(i))
+
+		return nil
 	case reflect.Int16:
-		return numericIntDecoder[int16](bbf, field)
+		var i int16
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(int64(i))
+
+		return nil
 	case reflect.Int32:
-		return numericIntDecoder[int32](bbf, field)
+		var i int32
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(int64(i))
+
+		return nil
 	case reflect.Int64:
-		return numericIntDecoder[int64](bbf, field)
+		var i int64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(i)
+
+		return nil
 	case reflect.Uint:
-		return numericUintDecoder[uint64](bbf, field)
+		var i uint64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetUint(i)
+
+		return nil
 	case reflect.Uint8:
-		return numericUintDecoder[uint8](bbf, field)
+		var i uint8
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetUint(uint64(i))
+
+		return nil
 	case reflect.Uint16:
-		return numericUintDecoder[uint16](bbf, field)
+		var i uint16
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetUint(uint64(i))
+
+		return nil
 	case reflect.Uint32:
-		return numericUintDecoder[uint32](bbf, field)
+		var i uint32
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetUint(uint64(i))
+
+		return nil
 	case reflect.Uint64:
-		return numericUintDecoder[uint64](bbf, field)
+		var i uint64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetUint(i)
+
+		return nil
 	case reflect.Float32:
-		return numericFloatDecoder[float32](bbf, field)
+		var i float32
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetFloat(float64(i))
+
+		return nil
 	case reflect.Float64:
-		return numericFloatDecoder[float64](bbf, field)
+		var i float64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetFloat(i)
+
+		return nil
 	case reflect.Complex64:
-		return numericComplexDecoder[complex64](bbf, field)
+		var i complex64
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetComplex(complex128(i))
+
+		return nil
 	case reflect.Complex128:
-		return numericComplexDecoder[complex128](bbf, field)
+		var i complex128
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetComplex(i)
+
+		return nil
 	case reflect.Uintptr:
-		return numericUintPtrDecoder[uintptr](bbf, field)
+		var i uintptr
+		if err := binary.Read(bbf, binary.LittleEndian, &i); err != nil {
+			return err
+		}
+
+		field.SetInt(int64(i))
+
+		return nil
 	default:
 		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
 	}
-}
-
-func numericIntDecoder[N numericalInt](
-	bbf *bytes.Buffer, field *reflect.Value,
-) error {
-	var i N
-	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
-		return err
-	}
-
-	field.SetInt(toInt64(i))
-
-	return nil
-}
-
-func numericUintDecoder[N numericalUint](
-	bbf *bytes.Buffer, field *reflect.Value,
-) error {
-	var i N
-	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
-		return err
-	}
-
-	field.SetUint(toUint64(i))
-
-	return nil
-}
-
-func numericFloatDecoder[N numericFloat](
-	bbf *bytes.Buffer, field *reflect.Value,
-) error {
-	var i N
-	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
-		return err
-	}
-
-	field.SetFloat(toFloat64(i))
-
-	return nil
-}
-
-func numericComplexDecoder[N numericComplex](
-	bbf *bytes.Buffer, field *reflect.Value,
-) error {
-	var i N
-	if err := binary.Read(bbf, binary.BigEndian, &i); err != nil {
-		return err
-	}
-
-	field.SetComplex(toComplex128(i))
-
-	return nil
-}
-
-func numericUintPtrDecoder[N numericUintPtr](
-	bbf *bytes.Buffer, field *reflect.Value,
-) error {
-	var i N
-	err := binary.Read(bbf, binary.BigEndian, &i)
-	if err != nil {
-		return err
-	}
-
-	field.SetInt(toInt64(i))
-
-	return nil
 }
 
 func encodeRune(str string) ([]byte, error) {
 	rs := []rune(str)
 
 	buf := make([]byte, 0, cap(rs)<<1)
-	buf, err := binary.Append(buf, binary.BigEndian, uint64(len(rs)))
+	buf, err := binary.Append(buf, binary.LittleEndian, uint64(len(rs)))
 	if err != nil {
 		return nil, err
 	}
 
-	if buf, err = binary.Append(buf, binary.BigEndian, rs); err != nil {
+	if buf, err = binary.Append(buf, binary.LittleEndian, rs); err != nil {
 		return nil, nil
 	}
 
@@ -363,13 +402,13 @@ func encodeRune(str string) ([]byte, error) {
 
 func decodeRune(bbf *bytes.Buffer, target *string) error {
 	var length uint64
-	if err := binary.Read(bbf, binary.BigEndian, &length); err != nil {
+	if err := binary.Read(bbf, binary.LittleEndian, &length); err != nil {
 		return err
 	}
 
 	rs := make([]rune, length)
 	for i := uint64(0); i < length; i++ {
-		if err := binary.Read(bbf, binary.BigEndian, &rs[i]); err != nil {
+		if err := binary.Read(bbf, binary.LittleEndian, &rs[i]); err != nil {
 			return err
 		}
 	}
@@ -382,132 +421,4 @@ func decodeRune(bbf *bytes.Buffer, target *string) error {
 	*target = strBuilder.String()
 
 	return nil
-}
-
-type (
-	numericalInt interface {
-		int | int8 | int16 | int32 | int64
-	}
-
-	numericalUint interface {
-		uint | uint8 | uint16 | uint32 | uint64
-	}
-
-	numericFloat interface {
-		float32 | float64
-	}
-
-	numericComplex interface {
-		complex64 | complex128
-	}
-
-	numericUintPtr interface {
-		uintptr
-	}
-)
-
-func toInt64(v interface{}) int64 {
-	switch n := v.(type) {
-	case int:
-		return int64(n)
-	case int8:
-		return int64(n)
-	case int16:
-		return int64(n)
-	case int32:
-		return int64(n)
-	case int64:
-		return n
-	case uint:
-		return int64(n)
-	case uint8:
-		return int64(n)
-	case uint16:
-		return int64(n)
-	case uint32:
-		return int64(n)
-	case uint64:
-		return int64(n)
-	case float32:
-		return int64(n)
-	case float64:
-		return int64(n)
-	case uintptr:
-		return int64(n)
-	}
-
-	return 0
-}
-
-func toUint64(v interface{}) uint64 {
-	switch n := v.(type) {
-	case int:
-		return uint64(n)
-	case int8:
-		return uint64(n)
-	case int16:
-		return uint64(n)
-	case int32:
-		return uint64(n)
-	case int64:
-		return uint64(n)
-	case uint:
-		return uint64(n)
-	case uint8:
-		return uint64(n)
-	case uint16:
-		return uint64(n)
-	case uint32:
-		return uint64(n)
-	case uint64:
-		return n
-	case float32:
-		return uint64(n)
-	case float64:
-		return uint64(n)
-	}
-
-	return 0
-}
-
-func toFloat64(v interface{}) float64 {
-	switch n := v.(type) {
-	case int:
-		return float64(n)
-	case int8:
-		return float64(n)
-	case int16:
-		return float64(n)
-	case int32:
-		return float64(n)
-	case int64:
-		return float64(n)
-	case uint:
-		return float64(n)
-	case uint8:
-		return float64(n)
-	case uint16:
-		return float64(n)
-	case uint32:
-		return float64(n)
-	case uint64:
-		return float64(n)
-	case float32:
-		return float64(n)
-	case float64:
-		return n
-	}
-
-	return 0
-}
-
-func toComplex128(v interface{}) complex128 {
-	switch n := v.(type) {
-	case complex64:
-		return complex128(n)
-	case complex128:
-		return n
-	}
-
-	return 0
 }

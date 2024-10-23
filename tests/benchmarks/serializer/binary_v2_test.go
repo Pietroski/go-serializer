@@ -11,7 +11,7 @@ import (
 )
 
 func Benchmark_BinaryV2Serializer(b *testing.B) {
-	b.Run("proto serialization", func(b *testing.B) {
+	b.Run("binary serialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -29,7 +29,7 @@ func Benchmark_BinaryV2Serializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto deserialization", func(b *testing.B) {
+	b.Run("binary deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -52,7 +52,7 @@ func Benchmark_BinaryV2Serializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("binary serialization and deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -80,7 +80,7 @@ func Benchmark_BinaryV2Serializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("binary serialization and deserialization with validation", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
