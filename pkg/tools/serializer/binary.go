@@ -249,31 +249,6 @@ func isPrimitive(target interface{}) bool {
 }
 
 func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect.Value) error {
-	//if field.Kind() == reflect.String {
-	//	var str string
-	//	err := s.stringSerializer.decode(bbf, &str)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	field.SetString(str)
-	//	return nil
-	//}
-	//
-	//if field.Kind() == reflect.Bool {
-	//	var b bool
-	//	if err := binary.Read(bbf, binary.BigEndian, &b); err != nil {
-	//		return err
-	//	}
-	//
-	//	field.SetBool(b)
-	//	return nil
-	//}
-
-	//if err := s.numericDeserializer(bbf, field); err != nil {
-	//	return err
-	//}
-
 	switch field.Kind() {
 	case reflect.String:
 		var str string
@@ -325,8 +300,6 @@ func (s *BinarySerializer) decodePrimitiveType(bbf *bytes.Buffer, field *reflect
 	default:
 		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
 	}
-
-	return nil
 }
 
 func numericIntDecoder[N numericalInt](
@@ -393,43 +366,6 @@ func numericUintPtrDecoder[N numericUintPtr](
 	field.SetInt(toInt64(i))
 
 	return nil
-}
-
-func (s *BinarySerializer) numericDeserializer(bbf *bytes.Buffer, field *reflect.Value) (err error) {
-	switch field.Kind() {
-	case reflect.Int:
-		return numericIntDecoder[int64](bbf, field)
-	case reflect.Int8:
-		return numericIntDecoder[int8](bbf, field)
-	case reflect.Int16:
-		return numericIntDecoder[int16](bbf, field)
-	case reflect.Int32:
-		return numericIntDecoder[int32](bbf, field)
-	case reflect.Int64:
-		return numericIntDecoder[int64](bbf, field)
-	case reflect.Uint:
-		return numericUintDecoder[uint64](bbf, field)
-	case reflect.Uint8:
-		return numericUintDecoder[uint8](bbf, field)
-	case reflect.Uint16:
-		return numericUintDecoder[uint16](bbf, field)
-	case reflect.Uint32:
-		return numericUintDecoder[uint32](bbf, field)
-	case reflect.Uint64:
-		return numericUintDecoder[uint64](bbf, field)
-	case reflect.Float32:
-		return numericFloatDecoder[float32](bbf, field)
-	case reflect.Float64:
-		return numericFloatDecoder[float64](bbf, field)
-	case reflect.Complex64:
-		return numericComplexDecoder[complex64](bbf, field)
-	case reflect.Complex128:
-		return numericComplexDecoder[complex128](bbf, field)
-	case reflect.Uintptr:
-		return numericUintPtrDecoder[uintptr](bbf, field)
-	default:
-		return fmt.Errorf("unsupported type %s - not numerical", field.Kind())
-	}
 }
 
 type (
