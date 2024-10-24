@@ -12,7 +12,7 @@ import (
 )
 
 func Benchmark_MsgPackSerializer(b *testing.B) {
-	b.Run("proto serialization", func(b *testing.B) {
+	b.Run("json serialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -30,7 +30,7 @@ func Benchmark_MsgPackSerializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto deserialization", func(b *testing.B) {
+	b.Run("json deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -53,7 +53,7 @@ func Benchmark_MsgPackSerializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("json serialization and deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -81,7 +81,7 @@ func Benchmark_MsgPackSerializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("json serialization and deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -105,7 +105,7 @@ func Benchmark_MsgPackSerializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto serialization and deserialization - clean - no validation", func(b *testing.B) {
+	b.Run("json serialization and deserialization - clean - no validation", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
