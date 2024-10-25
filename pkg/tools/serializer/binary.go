@@ -54,6 +54,82 @@ func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
 }
 
 func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
+	//bbr := newBytesReader(data)
+
+	//value := reflect.ValueOf(target)
+	//if value.Kind() == reflect.Ptr {
+	//	value = value.Elem()
+	//}
+	//
+	//if isReflectPrimitive(value.Kind()) {
+	//	s.deserializePrimitive(bbr, &value)
+	//
+	//	return nil
+	//}
+
+	s.decode(data, target)
+
+	//if value.Kind() == reflect.Struct {
+	//	//s.structDecode(bbr, &value)
+	//
+	//	limit := value.NumField()
+	//	for idx := 0; idx < limit; idx++ {
+	//		f := value.Field(idx)
+	//		if f.Kind() == reflect.Ptr {
+	//			// isItNil?
+	//			if bbr.next() == 1 {
+	//				continue
+	//			}
+	//
+	//			f.Set(reflect.New(f.Type().Elem()))
+	//			f = f.Elem()
+	//		}
+	//
+	//		if f.Kind() == reflect.Struct {
+	//			s.structDecode(bbr, &f)
+	//
+	//			continue
+	//		}
+	//
+	//		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
+	//			s.sliceArrayDecode(bbr, &f)
+	//
+	//			continue
+	//		}
+	//
+	//		if f.Kind() == reflect.Map {
+	//			s.mapDecode(bbr, &f)
+	//
+	//			continue
+	//		}
+	//
+	//		s.deserializePrimitive(bbr, &f)
+	//	}
+	//
+	//	return nil
+	//}
+	//
+	//if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
+	//	s.sliceArrayDecode(bbr, &value)
+	//	return nil
+	//}
+
+	return nil
+}
+
+func (s *BinarySerializer) decode(data []byte, target interface{}) {
+	//if field.Kind() == reflect.Struct {
+	//	s.structDecode(bbr, field)
+	//
+	//	return
+	//}
+	//
+	//if field.Kind() == reflect.Slice || field.Kind() == reflect.Array {
+	//	s.sliceArrayDecode(bbr, field)
+	//
+	//	return
+	//}
+
 	bbr := newBytesReader(data)
 
 	value := reflect.ValueOf(target)
@@ -63,6 +139,8 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 
 	if isReflectPrimitive(value.Kind()) {
 		s.deserializePrimitive(bbr, &value)
+
+		return
 	}
 
 	if value.Kind() == reflect.Struct {
@@ -102,15 +180,13 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 			s.deserializePrimitive(bbr, &f)
 		}
 
-		return nil
+		return
 	}
 
 	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
 		s.sliceArrayDecode(bbr, &value)
-		return nil
+		return
 	}
-
-	return nil
 }
 
 func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
@@ -309,7 +385,8 @@ func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) 
 
 		if f.Kind() == reflect.Struct {
 			//s.structDecode(bbr, &f)
-			_ = s.Deserialize(bbr.bytesFromCursor(), f.Addr().Interface())
+			s.decode(bbr.bytesFromCursor(), f.Addr().Interface())
+			//_ = s.Deserialize(bbr.bytesFromCursor(), f.Addr().Interface())
 
 			continue
 		}
@@ -707,6 +784,7 @@ const (
 type bytesReader struct {
 	data   []byte
 	cursor int
+	//yield  int
 }
 
 func newBytesReader(data []byte) *bytesReader {
@@ -721,8 +799,22 @@ func (bbr *bytesReader) next() byte {
 }
 
 func (bbr *bytesReader) read(n int) []byte {
-	bs := make([]byte, n)
-	copy(bs, bbr.data[bbr.cursor:bbr.cursor+n])
+	bs := bbr.data[bbr.cursor : bbr.cursor+n]
+
+	bbr.cursor += n
+	return bs
+}
+
+func (bbr *bytesReader) yield() int {
+	return bbr.cursor
+}
+
+func (bbr *bytesReader) skip(n int) {
+	bbr.cursor += n
+}
+
+func (bbr *bytesReader) readCut(n int) []byte {
+	bs := bbr.data[bbr.cursor : bbr.cursor+n]
 
 	bbr.cursor += n
 	return bs
@@ -734,6 +826,12 @@ func (bbr *bytesReader) bytes() []byte {
 
 func (bbr *bytesReader) bytesFromCursor() []byte {
 	return bbr.data[bbr.cursor:]
+}
+
+func (bbr *bytesReader) cutBytes() []byte {
+	bbr.data = bbr.data[bbr.cursor:]
+	bbr.cursor = 0
+	return bbr.data
 }
 
 type bytesWriter struct {
