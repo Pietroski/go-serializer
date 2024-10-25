@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"math"
 	"reflect"
 	"unsafe"
@@ -15,9 +14,7 @@ type (
 )
 
 func NewBinarySerializer() *BinarySerializer {
-	bs := &BinarySerializer{}
-
-	return bs
+	return &BinarySerializer{}
 }
 
 func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
@@ -29,117 +26,89 @@ func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
 		return bbf.Bytes(), nil
 	}
 
-	vofd := reflect.ValueOf(data)
-	if vofd.Kind() == reflect.Ptr {
-		vofd = vofd.Elem()
+	value := reflect.ValueOf(data)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
 	}
 
-	limit := vofd.NumField()
-	for idx := 0; idx < limit; idx++ {
-		field := vofd.Field(idx)
-		if field.Kind() == reflect.Chan {
-			return nil, fmt.Errorf("invalid type %v", field.Kind())
+	if value.Kind() == reflect.Struct {
+		if err := s.structEncode(bbf, &value); err != nil {
+			return nil, err
 		}
 
-		if field.Kind() == reflect.Ptr {
-			bs := make([]byte, 1)
-			if field.IsNil() {
-				bs[0] = 1
-				bbf.Write(bs)
+		return bbf.Bytes(), nil
+	}
 
-				continue
-			}
-
-			bs[0] = 0
-			bbf.Write(bs)
-
-			field = field.Elem()
+	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
+		if err := s.sliceArrayEncode(bbf, &value); err != nil {
+			return nil, err
 		}
 
-		if field.Kind() == reflect.Struct {
-			eBs, err := s.Serialize(field.Interface())
-			if err != nil {
-				return nil, err
-			}
+		return bbf.Bytes(), nil
+	}
 
-			bbf.Write(eBs)
-
-			continue
-		}
-
-		if field.Kind() == reflect.Slice || field.Kind() == reflect.Array {
-			if err := s.sliceArrayEncoder(bbf, &field); err != nil {
-				return nil, err
-			}
-
-			continue
-		}
-
-		if field.Kind() == reflect.Map {
-			if err := s.mapEncoder(bbf, &field); err != nil {
-				return nil, err
-			}
-
-			continue
-		}
-
-		s.serializePrimitive(bbf, field.Interface())
+	if value.Kind() == reflect.Chan {
+		return nil, fmt.Errorf("invalid type %v", value.Kind())
 	}
 
 	return bbf.Bytes(), nil
 }
 
 func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
-	bbf := bytes.NewBuffer(data)
+	bbr := newBytesReader(data)
 
-	voft := reflect.ValueOf(target)
-	if voft.Kind() == reflect.Ptr {
-		voft = voft.Elem()
+	value := reflect.ValueOf(target)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
 	}
 
-	if isPrimitive(target) {
-		return s.deserializePrimitive(bbf, &voft)
+	if isReflectPrimitive(value.Kind()) {
+		s.deserializePrimitive(bbr, &value)
 	}
 
-	limit := voft.NumField()
-	for idx := 0; idx < limit; idx++ {
-		field := voft.Field(idx)
-		if field.Kind() == reflect.Chan {
-			return fmt.Errorf("invalid type %v", field.Kind())
-		}
+	if value.Kind() == reflect.Struct {
+		//s.structDecode(bbr, &value)
+		limit := value.NumField()
+		for idx := 0; idx < limit; idx++ {
+			f := value.Field(idx)
+			if f.Kind() == reflect.Ptr {
+				// isItNil?
+				if bbr.next() == 1 {
+					continue
+				}
 
-		if field.Kind() == reflect.Ptr {
-			isItNull := make([]byte, 1)
-			if _, err := io.ReadFull(bbf, isItNull); err != nil {
-				return err
+				f.Set(reflect.New(f.Type().Elem()))
+				f = f.Elem()
 			}
-			if isItNull[0] == 1 {
+
+			if f.Kind() == reflect.Struct {
+				s.structDecode(bbr, &f)
+
 				continue
 			}
 
-			field.Set(reflect.New(field.Type().Elem()))
-			field = field.Elem()
-		}
+			if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
+				s.sliceArrayDecode(bbr, &f)
 
-		if field.Kind() == reflect.Struct {
-			if err := s.structDecode(bbf, &field); err != nil {
-				return err
+				continue
 			}
 
-			continue
-		}
+			if f.Kind() == reflect.Map {
+				s.mapDecoder(bbr, &f)
 
-		if field.Kind() == reflect.Slice || field.Kind() == reflect.Array {
-			if err := s.sliceArrayDecoder(bbf, &field); err != nil {
-				return err
+				continue
 			}
 
-			continue
+			s.deserializePrimitive(bbr, &f)
 		}
 
-		if err := s.deserializePrimitive(bbf, &field); err != nil {
-			return err
-		}
+		return nil
+	}
+
+	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
+		s.sliceArrayDecode(bbr, &value)
+
+		return nil
 	}
 
 	return nil
@@ -238,174 +207,85 @@ func (s *BinarySerializer) serializePrimitive(bbf *bytes.Buffer, data interface{
 	}
 }
 
-func (s *BinarySerializer) deserializePrimitive(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.Value) {
 	switch field.Kind() {
 	case reflect.String:
-		var str string
-		if err := decodeRune(bbf, &str); err != nil {
-			return err
-		}
-
-		field.SetString(str)
-		return nil
+		field.SetString(decodeRune(br))
 	case reflect.Bool:
-		bs := make([]byte, 1)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetBool(bs[0] == 1)
+		field.SetBool(br.next() == 1)
 	case reflect.Int:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetInt(int64(binary.LittleEndian.Uint64(bs)))
+		field.SetInt(int64(binary.LittleEndian.Uint64(br.readBytes(8))))
 	case reflect.Int8:
-		bs := make([]byte, 1)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetInt(int64(bs[0]))
+		field.SetInt(int64(br.next()))
 	case reflect.Int16:
-		bs := make([]byte, 2)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetInt(int64(binary.LittleEndian.Uint16(bs)))
+		field.SetInt(int64(binary.LittleEndian.Uint16(br.readBytes(2))))
 	case reflect.Int32:
-		bs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetInt(int64(binary.LittleEndian.Uint32(bs)))
+		field.SetInt(int64(binary.LittleEndian.Uint32(br.readBytes(4))))
 	case reflect.Int64:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetInt(int64(binary.LittleEndian.Uint64(bs)))
+		field.SetInt(int64(binary.LittleEndian.Uint64(br.readBytes(8))))
 	case reflect.Uint:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetUint(binary.LittleEndian.Uint64(bs))
+		field.SetUint(binary.LittleEndian.Uint64(br.readBytes(8)))
 	case reflect.Uint8:
-		bs := make([]byte, 1)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetUint(uint64(bs[0]))
+		field.SetUint(uint64(br.next()))
 	case reflect.Uint16:
-		bs := make([]byte, 2)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetUint(uint64(binary.LittleEndian.Uint16(bs)))
+		field.SetUint(uint64(binary.LittleEndian.Uint16(br.readBytes(2))))
 	case reflect.Uint32:
-		bs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetUint(uint64(binary.LittleEndian.Uint32(bs)))
+		field.SetUint(uint64(binary.LittleEndian.Uint32(br.readBytes(4))))
 	case reflect.Uint64:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetUint(binary.LittleEndian.Uint64(bs))
+		field.SetUint(binary.LittleEndian.Uint64(br.readBytes(8)))
 	case reflect.Float32:
-		bs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetFloat(float64(math.Float32frombits(binary.LittleEndian.Uint32(bs))))
+		field.SetFloat(float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))))
 	case reflect.Float64:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		field.SetFloat(math.Float64frombits(binary.LittleEndian.Uint64(bs)))
+		field.SetFloat(math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))))
 	case reflect.Complex64:
-		rbs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, rbs); err != nil {
-			return err
-		}
-
-		ibs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, ibs); err != nil {
-			return err
-		}
-
 		field.SetComplex(complex(
-			float64(math.Float32frombits(binary.LittleEndian.Uint32(rbs))),
-			float64(math.Float32frombits(binary.LittleEndian.Uint32(ibs))),
+			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))),
+			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))),
 		))
 	case reflect.Complex128:
-		rbs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, rbs); err != nil {
-			return err
-		}
-
-		ibs := make([]byte, 4)
-		if _, err := io.ReadFull(bbf, ibs); err != nil {
-			return err
-		}
-
 		field.SetComplex(complex(
-			math.Float64frombits(binary.LittleEndian.Uint64(rbs)),
-			math.Float64frombits(binary.LittleEndian.Uint64(ibs)),
+			math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))),
+			math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))),
 		))
 	case reflect.Uintptr:
-		bs := make([]byte, 8)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		iPtr := int(binary.LittleEndian.Uint64(bs))
+		iPtr := int(binary.LittleEndian.Uint64(br.readBytes(8)))
 		field.SetPointer(unsafe.Pointer(&iPtr))
 	default:
-		return nil
 	}
-
-	return nil
 }
 
-func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) structEncode(bbf *bytes.Buffer, field *reflect.Value) error {
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
 		if f.Kind() == reflect.Ptr {
+			bs := make([]byte, 1)
+			if f.IsNil() {
+				bs[0] = 1
+				bbf.Write(bs)
+
+				continue
+			}
+
+			bs[0] = 0
+			bbf.Write(bs)
+
 			f = f.Elem()
 		}
 
-		if f.Kind() == reflect.Chan {
-			return fmt.Errorf("invalid type %v", f.Kind())
-		}
-
 		if f.Kind() == reflect.Struct {
-			if err := s.structDecode(bbf, &f); err != nil {
+			eBs, err := s.Serialize(f.Interface())
+			if err != nil {
 				return err
 			}
+
+			bbf.Write(eBs)
 
 			continue
 		}
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
-			if err := s.sliceArrayDecoder(bbf, &f); err != nil {
+			if err := s.sliceArrayEncode(bbf, &f); err != nil {
 				return err
 			}
 
@@ -413,20 +293,56 @@ func (s *BinarySerializer) structDecode(bbf *bytes.Buffer, field *reflect.Value)
 		}
 
 		if f.Kind() == reflect.Map {
-			if err := s.mapDecoder(bbf, &f); err != nil {
+			if err := s.mapEncoder(bbf, &f); err != nil {
 				return err
 			}
+
+			continue
 		}
 
-		if err := s.deserializePrimitive(bbf, &f); err != nil {
-			return err
-		}
+		s.serializePrimitive(bbf, f.Interface())
 	}
 
 	return nil
 }
 
-func (s *BinarySerializer) sliceArrayEncoder(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) {
+	limit := field.NumField()
+	for idx := 0; idx < limit; idx++ {
+		f := field.Field(idx)
+		if f.Kind() == reflect.Ptr {
+			// isItNil?
+			if bbr.next() == 1 {
+				continue
+			}
+
+			f.Set(reflect.New(f.Type().Elem()))
+			f = f.Elem()
+		}
+
+		if f.Kind() == reflect.Struct {
+			s.structDecode(bbr, &f)
+
+			continue
+		}
+
+		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
+			s.sliceArrayDecode(bbr, &f)
+
+			continue
+		}
+
+		if f.Kind() == reflect.Map {
+			s.mapDecoder(bbr, &f)
+
+			continue
+		}
+
+		s.deserializePrimitive(bbr, &f)
+	}
+}
+
+func (s *BinarySerializer) sliceArrayEncode(bbf *bytes.Buffer, field *reflect.Value) error {
 	fLen := field.Len()
 
 	bs := make([]byte, 4)
@@ -437,7 +353,7 @@ func (s *BinarySerializer) sliceArrayEncoder(bbf *bytes.Buffer, field *reflect.V
 		f := field.Index(i)
 		if f.Type().Kind() != reflect.Slice && f.Type().Kind() != reflect.Array {
 			if f.Kind() == reflect.Ptr {
-				bs := make([]byte, 1)
+				bs = make([]byte, 1)
 				if f.IsNil() {
 					bs[0] = 1
 					bbf.Write(bs)
@@ -451,30 +367,37 @@ func (s *BinarySerializer) sliceArrayEncoder(bbf *bytes.Buffer, field *reflect.V
 				f = f.Elem()
 			}
 
-			eBs, err := s.Serialize(f.Interface())
-			if err != nil {
-				return err
+			if f.Kind() == reflect.Struct {
+				eBs, err := s.Serialize(f.Interface())
+				if err != nil {
+					return err
+				}
+
+				bbf.Write(eBs)
+
+				continue
 			}
 
-			bbf.Write(eBs)
-			continue
+			if isPrimitive(f.Interface()) {
+				s.serializePrimitive(bbf, f.Interface())
+
+				continue
+			}
 		}
 
-		if err := s.sliceArrayEncoder(bbf, &f); err != nil {
+		eBs, err := s.Serialize(f.Interface())
+		if err != nil {
 			return err
 		}
+
+		bbf.Write(eBs)
 	}
 
 	return nil
 }
 
-func (s *BinarySerializer) sliceArrayDecoder(bbf *bytes.Buffer, field *reflect.Value) error {
-	bs := make([]byte, 4)
-	if _, err := io.ReadFull(bbf, bs); err != nil {
-		return err
-	}
-
-	length := binary.LittleEndian.Uint32(bs)
+func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
+	length := binary.LittleEndian.Uint32(bbr.readBytes(4))
 
 	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
 
@@ -482,27 +405,20 @@ func (s *BinarySerializer) sliceArrayDecoder(bbf *bytes.Buffer, field *reflect.V
 		f := field.Index(int(i))
 
 		if isPrimitive(f.Interface()) {
-			if err := s.deserializePrimitive(bbf, &f); err != nil {
-				return err
-			}
+			s.deserializePrimitive(bbr, &f)
 
 			continue
 		}
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
-			if err := s.sliceArrayDecoder(bbf, &f); err != nil {
-				return err
-			}
+			s.sliceArrayDecode(bbr, &f)
 
 			continue
 		}
 
 		if f.Kind() == reflect.Ptr {
-			isItNull := make([]byte, 1)
-			if _, err := io.ReadFull(bbf, isItNull); err != nil {
-				return err
-			}
-			if isItNull[0] == 1 {
+			// isItNil
+			if bbr.next() == 1 {
 				continue
 			}
 
@@ -511,15 +427,11 @@ func (s *BinarySerializer) sliceArrayDecoder(bbf *bytes.Buffer, field *reflect.V
 		}
 
 		if f.Kind() == reflect.Struct {
-			if err := s.structDecode(bbf, &f); err != nil {
-				return err
-			}
+			s.structDecode(bbr, &f)
 
 			continue
 		}
 	}
-
-	return nil
 }
 
 func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) error {
@@ -565,7 +477,7 @@ func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) e
 		//}
 		//
 		//if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		//	if err = s.sliceArrayEncoder(bbf, &value); err != nil {
+		//	if err = s.sliceArrayEncode(bbf, &value); err != nil {
 		//		return err
 		//	}
 		//
@@ -589,13 +501,8 @@ func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) e
 	return nil
 }
 
-func (s *BinarySerializer) mapDecoder(bbf *bytes.Buffer, field *reflect.Value) error {
-	bs := make([]byte, 4)
-	if _, err := io.ReadFull(bbf, bs); err != nil {
-		return err
-	}
-
-	length := binary.LittleEndian.Uint32(bs)
+func (s *BinarySerializer) mapDecoder(bbr *bytesReader, field *reflect.Value) {
+	length := binary.LittleEndian.Uint32(bbr.readBytes(4))
 
 	field.Set(reflect.MakeMapWithSize(field.Type(), int(length)))
 
@@ -603,39 +510,23 @@ func (s *BinarySerializer) mapDecoder(bbf *bytes.Buffer, field *reflect.Value) e
 
 	for i := uint32(0); i < length; i++ {
 		// key
-		bs = make([]byte, 1)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		kind := fromKeyType(keyTypeMapping, bs[0])
+		kind := fromKeyType(keyTypeMapping, bbr.next())
 		fKey := reflect.New(field.Type().Key()).Elem()
 
 		if isReflectPrimitive(kind) {
-			if err := s.deserializePrimitive(bbf, &fKey); err != nil {
-				return err
-			}
+			s.deserializePrimitive(bbr, &fKey)
 		}
 
 		// value
-		bs = make([]byte, 1)
-		if _, err := io.ReadFull(bbf, bs); err != nil {
-			return err
-		}
-
-		kind = fromKeyType(keyTypeMapping, bs[0])
+		kind = fromKeyType(keyTypeMapping, bbr.next())
 		fValue := reflect.New(field.Type().Elem()).Elem()
 
 		if isReflectPrimitive(kind) {
-			if err := s.deserializePrimitive(bbf, &fValue); err != nil {
-				return err
-			}
+			s.deserializePrimitive(bbr, &fValue)
 		}
 
 		field.SetMapIndex(fKey, fValue)
 	}
-
-	return nil
 }
 
 func isPrimitive(target interface{}) bool {
@@ -652,6 +543,8 @@ func isPrimitive(target interface{}) bool {
 		*uintptr,
 		string, *string,
 		bool, *bool:
+		return true
+	case nil:
 		return true
 	default:
 		return false
@@ -686,27 +579,17 @@ func encodeRune(bbf *bytes.Buffer, str string) {
 	bbf.Write(bs)
 }
 
-func decodeRune(bbf *bytes.Buffer, target *string) error {
-	bs := make([]byte, 4)
-	if _, err := io.ReadFull(bbf, bs); err != nil {
-		return err
-	}
+// TODO: bench it against returning
+func decodeRune(br *bytesReader) string {
+	length := binary.LittleEndian.Uint32(br.readBytes(4))
+	bs := br.readBytes(int(length << 2))
 
-	length := binary.LittleEndian.Uint32(bs)
-
-	bs = make([]byte, length<<2)
-	if _, err := io.ReadFull(bbf, bs); err != nil {
-		return err
-	}
-
-	bf := &bytes.Buffer{}
+	rb := make([]rune, int(length))
 	for i := uint32(0); i < length; i++ {
-		bf.WriteRune(int32(binary.LittleEndian.Uint32(bs[4*i:])))
+		rb[i] = int32(binary.LittleEndian.Uint32(bs[4*i:]))
 	}
 
-	*target = bf.String()
-
-	return nil
+	return string(rb)
 }
 
 func keyType(keyTypeMapping map[reflect.Kind]uint8, value reflect.Value) uint8 {
@@ -836,3 +719,29 @@ const (
 	structValue
 	mapValue
 )
+
+type bytesReader struct {
+	data   []byte
+	cursor int
+}
+
+func newBytesReader(data []byte) *bytesReader {
+	return &bytesReader{
+		data: data,
+	}
+}
+
+func (bbr *bytesReader) next() byte {
+	bbr.cursor++
+	return bbr.data[bbr.cursor-1]
+}
+
+func (bbr *bytesReader) readBytes(n int) []byte {
+	bs := make([]byte, n)
+	for i := 0; i < n; i++ {
+		bs[i] = bbr.data[bbr.cursor+i]
+	}
+
+	bbr.cursor += n
+	return bs
+}

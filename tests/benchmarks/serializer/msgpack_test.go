@@ -145,3 +145,24 @@ func Benchmark_ProtoMsgPackSerializerSerializer(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkType_MsgPackSerializer(b *testing.B) {
+	b.Run("slice serialization", func(b *testing.B) {
+		b.Run("int slice", func(b *testing.B) {
+			msg := SliceTestData{
+				IntList: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			}
+			serializer := go_serializer.NewMsgPackSerializer()
+
+			var target SliceTestData
+			bs, _ := serializer.Serialize(msg)
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+			}
+		})
+	})
+}

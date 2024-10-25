@@ -307,3 +307,35 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 		}
 	})
 }
+
+//type bsReader struct {
+//	cursor int
+//}
+//
+//func (bsr *bsReader) readBytes(bs []byte, n int) []byte {
+//	bbs := make([]byte, n)
+//	for i := 0; i < n; i++ {
+//		bs[i] = bs[bsr.cursor+i]
+//	}
+//
+//	bsr.cursor += n
+//	return bbs
+//}
+//
+//func Benchmark_BinaryBytesReader(b *testing.B) {
+//	bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//
+//	b.Run("1", func(b *testing.B) {
+//		for i := 0; i < b.N; i++ {
+//			bbr := newBufferReader(bs)
+//			_ = bbr.readBytes(10)
+//		}
+//	})
+//
+//	b.Run("1", func(b *testing.B) {
+//		for i := 0; i < b.N; i++ {
+//			bbr := newBufferReader(bs)
+//			_ = bbr.readBytes(10)
+//		}
+//	})
+//}

@@ -30,7 +30,7 @@ func Benchmark_GobSerializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto serialization and deserialization - clean - no validation", func(b *testing.B) {
+	b.Run("gob/json serialization and deserialization - clean - no validation", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,

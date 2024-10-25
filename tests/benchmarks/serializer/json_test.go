@@ -12,7 +12,7 @@ import (
 )
 
 func Benchmark_JsonSerializer(b *testing.B) {
-	b.Run("proto serialization", func(b *testing.B) {
+	b.Run("json serialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -30,7 +30,7 @@ func Benchmark_JsonSerializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto deserialization", func(b *testing.B) {
+	b.Run("json deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -53,7 +53,7 @@ func Benchmark_JsonSerializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("json serialization and deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -81,7 +81,7 @@ func Benchmark_JsonSerializer(b *testing.B) {
 		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization", func(b *testing.B) {
+	b.Run("json serialization and deserialization", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -105,7 +105,7 @@ func Benchmark_JsonSerializer(b *testing.B) {
 		}
 	})
 
-	b.Run("proto serialization and deserialization - clean - no validation", func(b *testing.B) {
+	b.Run("json serialization and deserialization - clean - no validation", func(b *testing.B) {
 		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
@@ -153,4 +153,25 @@ func validateStructMsgAndTarget(b *testing.B, msg, target *item_models.Item) {
 	require.Equal(b, msg.SubItem.Date, target.SubItem.Date)
 	require.Equal(b, msg.SubItem.Amount, target.SubItem.Amount)
 	require.Equal(b, msg.SubItem.ItemCode, target.SubItem.ItemCode)
+}
+
+func BenchmarkType_JsonSerializer(b *testing.B) {
+	b.Run("slice serialization", func(b *testing.B) {
+		b.Run("int slice", func(b *testing.B) {
+			msg := SliceTestData{
+				IntList: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			}
+			serializer := go_serializer.NewJsonSerializer()
+
+			var target SliceTestData
+			bs, _ := serializer.Serialize(msg)
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+			}
+		})
+	})
 }
