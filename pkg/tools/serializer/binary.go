@@ -1,7 +1,6 @@
 package go_serializer
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -18,12 +17,12 @@ func NewBinarySerializer() *BinarySerializer {
 }
 
 func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
-	bbf := &bytes.Buffer{}
+	bbw := newBytesWriter(make([]byte, 1<<5)) // bbw := newBytesWriter(make([]byte, 1<<4)) // bbf := &bytes.Buffer{}
 
 	if isPrimitive(data) {
-		s.serializePrimitive(bbf, data)
+		s.serializePrimitive(bbw, data)
 
-		return bbf.Bytes(), nil
+		return bbw.bytes(), nil
 	}
 
 	value := reflect.ValueOf(data)
@@ -32,26 +31,26 @@ func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
 	}
 
 	if value.Kind() == reflect.Struct {
-		if err := s.structEncode(bbf, &value); err != nil {
+		if err := s.structEncode(bbw, &value); err != nil {
 			return nil, err
 		}
 
-		return bbf.Bytes(), nil
+		return bbw.bytes(), nil
 	}
 
 	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		if err := s.sliceArrayEncode(bbf, &value); err != nil {
+		if err := s.sliceArrayEncode(bbw, &value); err != nil {
 			return nil, err
 		}
 
-		return bbf.Bytes(), nil
+		return bbw.bytes(), nil
 	}
 
 	if value.Kind() == reflect.Chan {
 		return nil, fmt.Errorf("invalid type %v", value.Kind())
 	}
 
-	return bbf.Bytes(), nil
+	return bbw.bytes(), nil
 }
 
 func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
@@ -68,6 +67,7 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 
 	if value.Kind() == reflect.Struct {
 		//s.structDecode(bbr, &value)
+
 		limit := value.NumField()
 		for idx := 0; idx < limit; idx++ {
 			f := value.Field(idx)
@@ -94,7 +94,7 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 			}
 
 			if f.Kind() == reflect.Map {
-				s.mapDecoder(bbr, &f)
+				s.mapDecode(bbr, &f)
 
 				continue
 			}
@@ -107,7 +107,6 @@ func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 
 	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
 		s.sliceArrayDecode(bbr, &value)
-
 		return nil
 	}
 
@@ -122,88 +121,80 @@ func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
 	return s.Deserialize(data, target)
 }
 
-func (s *BinarySerializer) serializePrimitive(bbf *bytes.Buffer, data interface{}) {
+func (s *BinarySerializer) serializePrimitive(bbw *bytesWriter, data interface{}) {
 	switch v := data.(type) {
 	case bool:
-		bs := make([]byte, 1)
 		if v {
-			bs[0] = 1
-			bbf.Write(bs)
-			return
+			bbw.put(1)
+		} else {
+			bbw.put(0)
 		}
-
-		bs[0] = 0
-		bbf.Write(bs)
 	case string:
-		encodeRune(bbf, v)
+		encodeRune(bbw, v)
 	case int:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, uint64(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case int8:
-		bs := make([]byte, 1)
-		bs[0] = byte(v)
-		bbf.Write(bs)
+		bbw.put(byte(v))
 	case int16:
 		bs := make([]byte, 2)
 		binary.LittleEndian.PutUint16(bs, uint16(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case int32:
 		bs := make([]byte, 4)
 		binary.LittleEndian.PutUint32(bs, uint32(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case int64:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, uint64(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case uint:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, uint64(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case uint8:
-		bs := make([]byte, 1)
-		bs[0] = v
-		bbf.Write(bs)
+		bbw.put(v)
 	case uint16:
 		bs := make([]byte, 2)
 		binary.LittleEndian.PutUint16(bs, v)
-		bbf.Write(bs)
+		bbw.write(bs)
 	case uint32:
 		bs := make([]byte, 4)
 		binary.LittleEndian.PutUint32(bs, v)
-		bbf.Write(bs)
+		bbw.write(bs)
 	case uint64:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, v)
-		bbf.Write(bs)
+		bbw.write(bs)
 	case float32:
 		bs := make([]byte, 4)
 		binary.LittleEndian.PutUint32(bs, math.Float32bits(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case float64:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, math.Float64bits(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case complex64:
 		bs := make([]byte, 4)
 		binary.LittleEndian.PutUint32(bs, math.Float32bits(real(v)))
-		bbf.Write(bs)
+		bbw.write(bs)
 
 		bs = make([]byte, 4)
 		binary.LittleEndian.PutUint32(bs, math.Float32bits(imag(v)))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case complex128:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, math.Float64bits(real(v)))
-		bbf.Write(bs)
+		bbw.write(bs)
 
 		bs = make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, math.Float64bits(imag(v)))
-		bbf.Write(bs)
+		bbw.write(bs)
 	case uintptr:
 		bs := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bs, uint64(v))
-		bbf.Write(bs)
+		bbw.write(bs)
 	}
 }
 
@@ -214,62 +205,58 @@ func (s *BinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.
 	case reflect.Bool:
 		field.SetBool(br.next() == 1)
 	case reflect.Int:
-		field.SetInt(int64(binary.LittleEndian.Uint64(br.readBytes(8))))
+		field.SetInt(int64(binary.LittleEndian.Uint64(br.read(8))))
 	case reflect.Int8:
 		field.SetInt(int64(br.next()))
 	case reflect.Int16:
-		field.SetInt(int64(binary.LittleEndian.Uint16(br.readBytes(2))))
+		field.SetInt(int64(binary.LittleEndian.Uint16(br.read(2))))
 	case reflect.Int32:
-		field.SetInt(int64(binary.LittleEndian.Uint32(br.readBytes(4))))
+		field.SetInt(int64(binary.LittleEndian.Uint32(br.read(4))))
 	case reflect.Int64:
-		field.SetInt(int64(binary.LittleEndian.Uint64(br.readBytes(8))))
+		field.SetInt(int64(binary.LittleEndian.Uint64(br.read(8))))
 	case reflect.Uint:
-		field.SetUint(binary.LittleEndian.Uint64(br.readBytes(8)))
+		field.SetUint(binary.LittleEndian.Uint64(br.read(8)))
 	case reflect.Uint8:
 		field.SetUint(uint64(br.next()))
 	case reflect.Uint16:
-		field.SetUint(uint64(binary.LittleEndian.Uint16(br.readBytes(2))))
+		field.SetUint(uint64(binary.LittleEndian.Uint16(br.read(2))))
 	case reflect.Uint32:
-		field.SetUint(uint64(binary.LittleEndian.Uint32(br.readBytes(4))))
+		field.SetUint(uint64(binary.LittleEndian.Uint32(br.read(4))))
 	case reflect.Uint64:
-		field.SetUint(binary.LittleEndian.Uint64(br.readBytes(8)))
+		field.SetUint(binary.LittleEndian.Uint64(br.read(8)))
 	case reflect.Float32:
-		field.SetFloat(float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))))
+		field.SetFloat(float64(math.Float32frombits(binary.LittleEndian.Uint32(br.read(4)))))
 	case reflect.Float64:
-		field.SetFloat(math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))))
+		field.SetFloat(math.Float64frombits(binary.LittleEndian.Uint64(br.read(8))))
 	case reflect.Complex64:
 		field.SetComplex(complex(
-			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))),
-			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.readBytes(4)))),
+			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.read(4)))),
+			float64(math.Float32frombits(binary.LittleEndian.Uint32(br.read(4)))),
 		))
 	case reflect.Complex128:
 		field.SetComplex(complex(
-			math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))),
-			math.Float64frombits(binary.LittleEndian.Uint64(br.readBytes(8))),
+			math.Float64frombits(binary.LittleEndian.Uint64(br.read(8))),
+			math.Float64frombits(binary.LittleEndian.Uint64(br.read(8))),
 		))
 	case reflect.Uintptr:
-		iPtr := int(binary.LittleEndian.Uint64(br.readBytes(8)))
+		iPtr := int(binary.LittleEndian.Uint64(br.read(8)))
 		field.SetPointer(unsafe.Pointer(&iPtr))
 	default:
 	}
 }
 
-func (s *BinarySerializer) structEncode(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) error {
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
 		if f.Kind() == reflect.Ptr {
-			bs := make([]byte, 1)
 			if f.IsNil() {
-				bs[0] = 1
-				bbf.Write(bs)
+				bbw.put(1)
 
 				continue
 			}
 
-			bs[0] = 0
-			bbf.Write(bs)
-
+			bbw.put(0)
 			f = f.Elem()
 		}
 
@@ -279,13 +266,13 @@ func (s *BinarySerializer) structEncode(bbf *bytes.Buffer, field *reflect.Value)
 				return err
 			}
 
-			bbf.Write(eBs)
+			bbw.write(eBs)
 
 			continue
 		}
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
-			if err := s.sliceArrayEncode(bbf, &f); err != nil {
+			if err := s.sliceArrayEncode(bbw, &f); err != nil {
 				return err
 			}
 
@@ -293,14 +280,14 @@ func (s *BinarySerializer) structEncode(bbf *bytes.Buffer, field *reflect.Value)
 		}
 
 		if f.Kind() == reflect.Map {
-			if err := s.mapEncoder(bbf, &f); err != nil {
+			if err := s.mapEncode(bbw, &f); err != nil {
 				return err
 			}
 
 			continue
 		}
 
-		s.serializePrimitive(bbf, f.Interface())
+		s.serializePrimitive(bbw, f.Interface())
 	}
 
 	return nil
@@ -321,7 +308,8 @@ func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) 
 		}
 
 		if f.Kind() == reflect.Struct {
-			s.structDecode(bbr, &f)
+			//s.structDecode(bbr, &f)
+			_ = s.Deserialize(bbr.bytesFromCursor(), f.Addr().Interface())
 
 			continue
 		}
@@ -333,7 +321,7 @@ func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) 
 		}
 
 		if f.Kind() == reflect.Map {
-			s.mapDecoder(bbr, &f)
+			s.mapDecode(bbr, &f)
 
 			continue
 		}
@@ -342,12 +330,12 @@ func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) 
 	}
 }
 
-func (s *BinarySerializer) sliceArrayEncode(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) error {
 	fLen := field.Len()
 
 	bs := make([]byte, 4)
 	binary.LittleEndian.PutUint32(bs, uint32(fLen))
-	bbf.Write(bs)
+	bbw.write(bs)
 
 	for i := 0; i < fLen; i++ {
 		f := field.Index(i)
@@ -356,33 +344,28 @@ func (s *BinarySerializer) sliceArrayEncode(bbf *bytes.Buffer, field *reflect.Va
 				bs = make([]byte, 1)
 				if f.IsNil() {
 					bs[0] = 1
-					bbf.Write(bs)
+					bbw.write(bs)
 
 					continue
 				}
 
 				bs[0] = 0
-				bbf.Write(bs)
+				bbw.write(bs)
 
 				f = f.Elem()
 			}
 
 			if f.Kind() == reflect.Struct {
-				eBs, err := s.Serialize(f.Interface())
-				if err != nil {
+				if err := s.structEncode(bbw, &f); err != nil {
 					return err
 				}
 
-				bbf.Write(eBs)
-
 				continue
 			}
 
-			if isPrimitive(f.Interface()) {
-				s.serializePrimitive(bbf, f.Interface())
-
-				continue
-			}
+			// this is always a primitive
+			s.serializePrimitive(bbw, f.Interface())
+			continue
 		}
 
 		eBs, err := s.Serialize(f.Interface())
@@ -390,14 +373,14 @@ func (s *BinarySerializer) sliceArrayEncode(bbf *bytes.Buffer, field *reflect.Va
 			return err
 		}
 
-		bbf.Write(eBs)
+		bbw.write(eBs)
 	}
 
 	return nil
 }
 
 func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
-	length := binary.LittleEndian.Uint32(bbr.readBytes(4))
+	length := binary.LittleEndian.Uint32(bbr.read(4))
 
 	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
 
@@ -412,6 +395,7 @@ func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Val
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
 			s.sliceArrayDecode(bbr, &f)
+			//_ = s.Deserialize(bbr.bytesFromCursor(), f.Addr().Interface())
 
 			continue
 		}
@@ -434,13 +418,13 @@ func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Val
 	}
 }
 
-func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) error {
+func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) error {
 	fLen := field.Len()
 
 	// map's length
 	bs := make([]byte, 4)
 	binary.LittleEndian.PutUint32(bs, uint32(fLen))
-	bbf.Write(bs)
+	bbw.write(bs)
 
 	keyTypeMapping := map[reflect.Kind]uint8{}
 
@@ -451,33 +435,33 @@ func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) e
 		kt := keyType(keyTypeMapping, key)
 		bs = make([]byte, 1)
 		bs[0] = kt
-		bbf.Write(bs)
+		bbw.write(bs)
 
 		// key
 		eBs, err := s.Serialize(key.Interface())
 		if err != nil {
 			return err
 		}
-		bbf.Write(eBs)
+		bbw.write(eBs)
 
 		// value
 		//if value.Kind() == reflect.Ptr {
 		//	bs = make([]byte, 1)
 		//	if value.IsNil() {
 		//		bs[0] = 1
-		//		bbf.Write(bs)
+		//		bbw.write(bs)
 		//
 		//		continue
 		//	}
 		//
 		//	bs[0] = 0
-		//	bbf.Write(bs)
+		//	bbw.write(bs)
 		//
 		//	value = value.Elem()
 		//}
 		//
 		//if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		//	if err = s.sliceArrayEncode(bbf, &value); err != nil {
+		//	if err = s.sliceArrayEncode(bbw, &value); err != nil {
 		//		return err
 		//	}
 		//
@@ -488,21 +472,21 @@ func (s *BinarySerializer) mapEncoder(bbf *bytes.Buffer, field *reflect.Value) e
 		kt = keyType(keyTypeMapping, key)
 		bs = make([]byte, 1)
 		bs[0] = kt
-		bbf.Write(bs)
+		bbw.write(bs)
 
 		// value
 		eBs, err = s.Serialize(value.Interface())
 		if err != nil {
 			return err
 		}
-		bbf.Write(eBs)
+		bbw.write(eBs)
 	}
 
 	return nil
 }
 
-func (s *BinarySerializer) mapDecoder(bbr *bytesReader, field *reflect.Value) {
-	length := binary.LittleEndian.Uint32(bbr.readBytes(4))
+func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
+	length := binary.LittleEndian.Uint32(bbr.read(4))
 
 	field.Set(reflect.MakeMapWithSize(field.Type(), int(length)))
 
@@ -544,8 +528,8 @@ func isPrimitive(target interface{}) bool {
 		string, *string,
 		bool, *bool:
 		return true
-	case nil:
-		return true
+	//case nil:
+	//	return true
 	default:
 		return false
 	}
@@ -564,25 +548,25 @@ func isReflectPrimitive(target reflect.Kind) bool {
 	}
 }
 
-func encodeRune(bbf *bytes.Buffer, str string) {
+func encodeRune(bbw *bytesWriter, str string) {
 	rs := []rune(str)
+	rsLimit := len(rs)
 
 	bs := make([]byte, 4)
-	binary.LittleEndian.PutUint32(bs, uint32(len(rs)))
-	bbf.Write(bs)
+	binary.LittleEndian.PutUint32(bs, uint32(rsLimit))
+	bbw.write(bs)
 
-	bs = make([]byte, len(rs)<<2)
+	bs = make([]byte, rsLimit<<2)
 	for i, r := range rs {
 		binary.LittleEndian.PutUint32(bs[4*i:], uint32(r))
 	}
 
-	bbf.Write(bs)
+	bbw.write(bs)
 }
 
-// TODO: bench it against returning
 func decodeRune(br *bytesReader) string {
-	length := binary.LittleEndian.Uint32(br.readBytes(4))
-	bs := br.readBytes(int(length << 2))
+	length := binary.LittleEndian.Uint32(br.read(4))
+	bs := br.read(int(length << 2))
 
 	rb := make([]rune, int(length))
 	for i := uint32(0); i < length; i++ {
@@ -736,12 +720,81 @@ func (bbr *bytesReader) next() byte {
 	return bbr.data[bbr.cursor-1]
 }
 
-func (bbr *bytesReader) readBytes(n int) []byte {
+func (bbr *bytesReader) read(n int) []byte {
 	bs := make([]byte, n)
-	for i := 0; i < n; i++ {
-		bs[i] = bbr.data[bbr.cursor+i]
-	}
+	copy(bs, bbr.data[bbr.cursor:bbr.cursor+n])
 
 	bbr.cursor += n
 	return bs
+}
+
+func (bbr *bytesReader) bytes() []byte {
+	return bbr.data[:bbr.cursor]
+}
+
+func (bbr *bytesReader) bytesFromCursor() []byte {
+	return bbr.data[bbr.cursor:]
+}
+
+type bytesWriter struct {
+	data   []byte
+	cursor int
+
+	freeCap int // cap(data) - len(data)
+	// realLen int
+}
+
+func newBytesWriter(data []byte) *bytesWriter {
+	bbw := &bytesWriter{
+		data:    data,
+		freeCap: cap(data) - len(data),
+	}
+	if bbw.freeCap == 0 {
+		bbw.freeCap = cap(data)
+	}
+	if len(data) == 0 {
+		bbw.data = bbw.data[:cap(data)]
+	}
+
+	return bbw
+}
+
+func (bbw *bytesWriter) put(b byte) {
+	if 1 >= bbw.freeCap {
+		newDataCap := cap(bbw.data) << 1
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	bbw.data[bbw.cursor] = b
+	bbw.cursor++
+	bbw.freeCap--
+}
+
+func (bbw *bytesWriter) write(bs []byte) {
+	limit := len(bs)
+	dataLimit := len(bbw.data)
+	dataCap := cap(bbw.data)
+
+	if limit > bbw.freeCap {
+		newDataCap := dataCap << 1
+		for dataLimit+limit-bbw.freeCap > newDataCap {
+			newDataCap <<= 1
+		}
+
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs)
+	bbw.cursor += limit
+	bbw.freeCap -= limit
+}
+
+func (bbw *bytesWriter) bytes() []byte {
+	return bbw.data[:bbw.cursor]
 }

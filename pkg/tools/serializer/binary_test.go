@@ -269,6 +269,48 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 		}
 	})
 
+	t.Run("success SliceTestData", func(t *testing.T) {
+		serializer := NewBinarySerializer()
+
+		testData := TestData{
+			SliceTestData: SliceTestData{
+				StrList: []string{
+					"item-1", "item-2", "item-3", "item-4", "item-5", "item-6", "item-7",
+				},
+				StrStrList: [][]string{
+					{"item-1", "item-2", "item-3", "item-4", "item-5", "item-6"},
+					{"another-item-1", "another-item-2", "another-item-3"},
+				},
+			},
+		}
+		bs, err := serializer.Serialize(&testData)
+		require.NoError(t, err)
+
+		//t.Log(string(bs), bs)
+
+		var td TestData
+		err = serializer.Deserialize(bs, &td)
+		require.NoError(t, err)
+
+		t.Log(td)
+		for _, psl := range td.SliceTestData.PtrStructList {
+			if psl != nil {
+				t.Log(*psl)
+				continue
+			}
+
+			t.Log(psl)
+		}
+		for _, psl := range td.SliceTestData.PtrStructNilList {
+			if psl != nil {
+				t.Log(*psl)
+				continue
+			}
+
+			t.Log(psl)
+		}
+	})
+
 	t.Run("success MapTestData", func(t *testing.T) {
 		serializer := NewBinarySerializer()
 
@@ -339,3 +381,114 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 //		}
 //	})
 //}
+
+// Benchmark_BinaryBytesReader
+//
+// goos: darwin
+// goarch: arm64
+// pkg: gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer
+// cpu: Apple M2 Max
+// Benchmark_BinaryBytesReader
+// Benchmark_BinaryBytesReader/1
+// Benchmark_BinaryBytesReader/1-12  	78567452	        14.16 ns/op
+// Benchmark_BinaryBytesReader/2
+// Benchmark_BinaryBytesReader/2-12  	65064895	        18.32 ns/op
+// Benchmark_BinaryBytesReader/2#01
+// Benchmark_BinaryBytesReader/2#01-12         	65056516	        18.20 ns/op
+//
+//	func Benchmark_BinaryBytesReader(b *testing.B) {
+//		b.Run("1", func(b *testing.B) {
+//			for i := 0; i < b.N; i++ {
+//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//				nbs := make([]byte, cap(bs)<<1)
+//				copy(nbs, bs)
+//				bs = nbs
+//			}
+//		})
+//
+//		b.Run("2", func(b *testing.B) {
+//			for i := 0; i < b.N; i++ {
+//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//				nbs := make([]byte, cap(bs)<<1)
+//				for idx, n := range bs {
+//					nbs[idx] = n
+//				}
+//				bs = nbs
+//			}
+//		})
+//
+//		b.Run("2", func(b *testing.B) {
+//			for i := 0; i < b.N; i++ {
+//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//				nbs := make([]byte, cap(bs)<<1)
+//				limit := len(bs)
+//				for idx := 0; idx < limit; idx++ {
+//					nbs[idx] = bs[idx]
+//				}
+//				bs = nbs
+//			}
+//		})
+//	}
+//
+//	func Benchmark_BinaryBytesReader(b *testing.B) {
+//		b.Run("1", func(b *testing.B) {
+//			for i := 0; i < b.N; i++ {
+//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//				nbs := make([]byte, cap(bs)<<1)
+//				copy(nbs, bs[3:7])
+//				bs = nbs
+//			}
+//		})
+//
+//		cursor := 3
+//		b.Run("2", func(b *testing.B) {
+//			for i := 0; i < b.N; i++ {
+//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//				nbs := make([]byte, cap(bs)<<1)
+//				limit := 4
+//				for idx := 0; idx < limit; idx++ {
+//					nbs[idx] = bs[cursor+idx]
+//				}
+//				bs = nbs
+//			}
+//		})
+//	}
+//
+//	func Test_BSReader(t *testing.T) {
+//		t.Log(1 << 4)
+//		bbr := newBytesWriter(make([]byte, 0, 1<<4))
+//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+//		bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+//		bbr.write(bs)
+//		t.Log(bbr.bytes())
+//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+//		nbs := []byte{10, 9, 8, 7, 6, 5}
+//		bbr.write(nbs)
+//		t.Log(bbr.bytes())
+//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+//		bbr.write(nbs)
+//		t.Log(bbr.bytes())
+//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+//		bbr.write([]byte{0, 0, 0, 0})
+//		t.Log(bbr.bytes())
+//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+//	}
+func Test_BSReader(t *testing.T) {
+	t.Log(1 << 4)
+	bbr := newBytesWriter(make([]byte, 1<<4))
+	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+	bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	bbr.write(bs)
+	t.Log(bbr.bytes())
+	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+	nbs := []byte{10, 9, 8, 7, 6, 5}
+	bbr.write(nbs)
+	t.Log(bbr.bytes())
+	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+	bbr.write(nbs)
+	t.Log(bbr.bytes())
+	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+	bbr.write([]byte{0, 0, 0, 0})
+	t.Log(bbr.bytes())
+	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
+}
