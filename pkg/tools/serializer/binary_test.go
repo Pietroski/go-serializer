@@ -492,3 +492,66 @@ func Test_BSReader(t *testing.T) {
 	t.Log(bbr.bytes())
 	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
 }
+
+func Test_Benchmark_Data(t *testing.T) {
+	t.Run("success MapTestData", func(t *testing.T) {
+		t.Run("map of int to int", func(t *testing.T) {
+			serializer := NewBinarySerializer()
+
+			msg := MapTestData{
+				Int64KeyMapInt64Value: map[int64]int64{
+					0:     100,
+					7:     2,
+					2:     8,
+					8:     4,
+					4:     16,
+					100:   200,
+					1_000: math.MaxInt64,
+				},
+			}
+			bs, err := serializer.Serialize(&msg)
+			require.NoError(t, err)
+
+			//t.Log(string(bs), bs)
+
+			var td MapTestData
+			err = serializer.Deserialize(bs, &td)
+			require.NoError(t, err)
+
+			t.Log(td)
+			for key, value := range td.Int64KeyMapInt64Value {
+				t.Logf("%v: %v\n", key, value)
+			}
+			for key, value := range td.StrKeyMapStrValue {
+				t.Logf("%v: %v\n", key, value)
+			}
+		})
+
+		t.Run("map of string to string", func(t *testing.T) {
+			serializer := NewBinarySerializer()
+
+			msg := MapTestData{
+				StrKeyMapStrValue: map[string]string{
+					"any-key":       "any-value",
+					"any-other-key": "any-other-value",
+				},
+			}
+			bs, err := serializer.Serialize(&msg)
+			require.NoError(t, err)
+
+			//t.Log(string(bs), bs)
+
+			var td MapTestData
+			err = serializer.Deserialize(bs, &td)
+			require.NoError(t, err)
+
+			t.Log(td)
+			for key, value := range td.Int64KeyMapInt64Value {
+				t.Logf("%v: %v\n", key, value)
+			}
+			for key, value := range td.StrKeyMapStrValue {
+				t.Logf("%v: %v\n", key, value)
+			}
+		})
+	})
+}

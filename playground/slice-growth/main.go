@@ -22,4 +22,11 @@ import "fmt"
 
 func main() {
 	fmt.Println(1 << 16)
+
+	fmt.Println(10 + 2)
+	fmt.Println(10 ^ 2)
+	fmt.Println(2 ^ 10<<1)
+	fmt.Println(10 ^ 2<<1)
+	fmt.Println((10 ^ 2) << 1)
+	fmt.Println(10<<1 ^ 2<<1)
 }
