@@ -1,7 +1,6 @@
 package go_serializer
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 )
@@ -17,53 +16,24 @@ func NewBinarySerializer() *BinarySerializer {
 // ################################################################################################################## \\
 
 func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
-	bbw := newBytesWriter(make([]byte, 1<<5))
-
-	if isPrimitive(data) {
-		s.serializePrimitive(bbw, data)
-
-		return bbw.bytes(), nil
-	}
-
-	value := reflect.ValueOf(data)
-	if value.Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
-
-	if value.Kind() == reflect.Struct {
-		if err := s.structEncode(bbw, &value); err != nil {
-			return nil, err
-		}
-
-		return bbw.bytes(), nil
-	}
-
-	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		if err := s.sliceArrayEncode(bbw, &value); err != nil {
-			return nil, err
-		}
-
-		return bbw.bytes(), nil
-	}
-
-	if value.Kind() == reflect.Map {
-		if err := s.mapEncode(bbw, &value); err != nil {
-			return nil, err
-		}
-
-		return bbw.bytes(), nil
-	}
-
-	if value.Kind() == reflect.Chan {
-		return nil, fmt.Errorf("invalid type %v", value.Kind())
-	}
-
-	return bbw.bytes(), nil
+	return s.encode(data), nil
 }
 
 func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 	s.decode(data, target)
 	return nil
+}
+
+// ################################################################################################################## \\
+// encoding interface implementation
+// ################################################################################################################## \\
+
+func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
+	return s.Serialize(data)
+}
+
+func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
+	return s.Deserialize(data, target)
 }
 
 // ################################################################################################################## \\
@@ -85,26 +55,17 @@ func (s *BinarySerializer) encode(data interface{}) []byte {
 	}
 
 	if value.Kind() == reflect.Struct {
-		if err := s.structEncode(bbw, &value); err != nil {
-			return nil
-		}
-
+		s.structEncode(bbw, &value)
 		return bbw.bytes()
 	}
 
 	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		if err := s.sliceArrayEncode(bbw, &value); err != nil {
-			return nil
-		}
-
+		s.sliceArrayEncode(bbw, &value)
 		return bbw.bytes()
 	}
 
 	if value.Kind() == reflect.Map {
-		if err := s.mapEncode(bbw, &value); err != nil {
-			return nil
-		}
-
+		s.mapEncode(bbw, &value)
 		return bbw.bytes()
 	}
 
@@ -145,18 +106,6 @@ func (s *BinarySerializer) decode(data []byte, target interface{}) int {
 	}
 
 	return bbr.yield()
-}
-
-// ################################################################################################################## \\
-// encoding interface implementation
-// ################################################################################################################## \\
-
-func (s *BinarySerializer) Marshal(data interface{}) ([]byte, error) {
-	return s.Serialize(data)
-}
-
-func (s *BinarySerializer) Unmarshal(data []byte, target interface{}) error {
-	return s.Deserialize(data, target)
 }
 
 // ################################################################################################################## \\
@@ -290,7 +239,7 @@ func (s *BinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.
 // struct encoder
 // ################################################################################################################## \\
 
-func (s *BinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) error {
+func (s *BinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) {
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
@@ -306,33 +255,22 @@ func (s *BinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) 
 		}
 
 		if f.Kind() == reflect.Struct {
-			eBs, err := s.Serialize(f.Interface())
-			if err != nil {
-				return err
-			}
-
-			bbw.write(eBs)
+			bbw.write(s.encode(f.Interface()))
 			continue
 		}
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
-			if err := s.sliceArrayEncode(bbw, &f); err != nil {
-				return err
-			}
+			s.sliceArrayEncode(bbw, &f)
 			continue
 		}
 
 		if f.Kind() == reflect.Map {
-			if err := s.mapEncode(bbw, &f); err != nil {
-				return err
-			}
+			s.mapEncode(bbw, &f)
 			continue
 		}
 
 		s.serializePrimitive(bbw, f.Interface())
 	}
-
-	return nil
 }
 
 func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) {
@@ -372,7 +310,7 @@ func (s *BinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) 
 // slice & array encoder
 // ################################################################################################################## \\
 
-func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) error {
+func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
 
 	bs := make([]byte, 4)
@@ -393,16 +331,12 @@ func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Val
 			}
 
 			if f.Kind() == reflect.Struct {
-				if err := s.structEncode(bbw, &f); err != nil {
-					return err
-				}
+				s.structEncode(bbw, &f)
 				continue
 			}
 
 			if f.Kind() == reflect.Map {
-				if err := s.mapEncode(bbw, &f); err != nil {
-					return err
-				}
+				s.mapEncode(bbw, &f)
 				continue
 			}
 
@@ -411,15 +345,9 @@ func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Val
 			continue
 		}
 
-		eBs, err := s.Serialize(f.Interface())
-		if err != nil {
-			return err
-		}
-
-		bbw.write(eBs)
+		// if it is an slice or array
+		bbw.write(s.encode(f.Interface()))
 	}
-
-	return nil
 }
 
 func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
@@ -467,7 +395,7 @@ func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Val
 // map encoder
 // ################################################################################################################## \\
 
-func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) error {
+func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
 	// map's length
 	fLen := field.Len()
 	bs := make([]byte, 4)
@@ -486,7 +414,7 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) err
 			bbw.write(bs)
 		}
 
-		return nil
+		return
 	case map[int]interface{}:
 		for k, v := range rawFieldValue {
 			bs = make([]byte, 8)
@@ -496,7 +424,7 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) err
 			s.serializePrimitive(bbw, &v)
 		}
 
-		return nil
+		return
 	case map[int64]int64:
 		for k, v := range rawFieldValue {
 			bs = make([]byte, 8)
@@ -508,7 +436,7 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) err
 			bbw.write(bs)
 		}
 
-		return nil
+		return
 	case map[int64]interface{}:
 		for k, v := range rawFieldValue {
 			bs = make([]byte, 8)
@@ -518,75 +446,45 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) err
 			s.serializePrimitive(bbw, &v)
 		}
 
-		return nil
+		return
 	case map[string]string:
 		for k, v := range rawFieldValue {
 			encodeRune(bbw, k)
 			encodeRune(bbw, v)
 		}
 
-		return nil
+		return
 	case map[string]interface{}:
 		for k, v := range rawFieldValue {
 			encodeRune(bbw, k)
 			s.serializePrimitive(bbw, &v)
 		}
 
-		return nil
+		return
 	}
 
-	// TODO: add support to various types with reflection
-	keyTypeMapping := map[reflect.Kind]uint8{}
-	for _, key := range field.MapKeys() {
-		// key type
-		kt := keyType(keyTypeMapping, key)
-		bbw.put(kt)
+	switch field.Interface().(type) {
+	case map[interface{}]interface{}:
+		for _, key := range field.MapKeys() {
+			// key
+			bbw.write(s.encode(key.Interface()))
 
-		// key
-		eBs, err := s.Serialize(key.Interface())
-		if err != nil {
-			return err
+			// value type
+			value := field.MapIndex(key)
+			// value
+			bbw.write(s.encode(value.Interface()))
 		}
-		bbw.write(eBs)
+	default:
+		for _, key := range field.MapKeys() {
+			// key
+			bbw.write(s.encode(key.Interface()))
 
-		// value
-		//if value.Kind() == reflect.Ptr {
-		//	bs = make([]byte, 1)
-		//	if value.IsNil() {
-		//		bs[0] = 1
-		//		bbw.write(bs)
-		//
-		//		continue
-		//	}
-		//
-		//	bs[0] = 0
-		//	bbw.write(bs)
-		//
-		//	value = value.Elem()
-		//}
-		//
-		//if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
-		//	if err = s.sliceArrayEncode(bbw, &value); err != nil {
-		//		return err
-		//	}
-		//
-		//	continue
-		//}
-
-		// value type
-		value := field.MapIndex(key)
-		vt := keyType(keyTypeMapping, key)
-		bbw.put(vt)
-
-		// value
-		eBs, err = s.Serialize(value.Interface())
-		if err != nil {
-			return err
+			// value type
+			value := field.MapIndex(key)
+			// value
+			bbw.write(s.encode(value.Interface()))
 		}
-		bbw.write(eBs)
 	}
-
-	return nil
 }
 
 func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
@@ -643,27 +541,29 @@ func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 		return
 	}
 
-	// TODO: add support to various types with reflection
-	field.Set(reflect.MakeMapWithSize(field.Type(), int(length)))
-	keyTypeMapping := map[uint8]reflect.Kind{}
-	for i := uint32(0); i < length; i++ {
-		// key
-		kind := fromKeyType(keyTypeMapping, bbr.next())
-		fKey := reflect.New(field.Type().Key()).Elem()
-
-		if isReflectPrimitive(kind) {
-			s.deserializePrimitive(bbr, &fKey)
+	switch field.Interface().(type) {
+	case map[interface{}]interface{}:
+		// temporary map to decode
+		tmtd := make(map[interface{}]interface{}, length)
+		for i := uint32(0); i < length; i++ {
+			var itrfcKey interface{}
+			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcKey))
+			var itrfcType interface{}
+			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcType))
+			tmtd[itrfcKey] = itrfcType
 		}
-
-		// value
-		kind = fromKeyType(keyTypeMapping, bbr.next())
-		fValue := reflect.New(field.Type().Elem()).Elem()
-
-		if isReflectPrimitive(kind) {
-			s.deserializePrimitive(bbr, &fValue)
+		field.Set(reflect.ValueOf(tmtd))
+	default:
+		// temporary map to decode
+		tmtd := make(map[interface{}]interface{}, length)
+		for i := uint32(0); i < length; i++ {
+			var itrfcKey interface{}
+			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcKey))
+			var itrfcType interface{}
+			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcType))
+			tmtd[itrfcKey] = itrfcType
 		}
-
-		field.SetMapIndex(fKey, fValue)
+		field.Set(reflect.ValueOf(tmtd))
 	}
 }
 
