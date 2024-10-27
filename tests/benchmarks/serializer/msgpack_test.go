@@ -327,7 +327,7 @@ func BenchmarkType_MsgPackSerializer(b *testing.B) {
 			}
 			serializer := go_serializer.NewMsgPackSerializer()
 
-			b.Run("int slice - encoding", func(b *testing.B) {
+			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
 				for i := 0; i < b.N; i++ {
 					bs, _ = serializer.Serialize(msg)
@@ -338,7 +338,7 @@ func BenchmarkType_MsgPackSerializer(b *testing.B) {
 				b.Log(target)
 			})
 
-			b.Run("int slice - decoding", func(b *testing.B) {
+			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
 				var target SliceTestData
@@ -348,7 +348,7 @@ func BenchmarkType_MsgPackSerializer(b *testing.B) {
 				b.Log(target)
 			})
 
-			b.Run("int slice", func(b *testing.B) {
+			b.Run("encoding - decoding", func(b *testing.B) {
 				var target SliceTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)

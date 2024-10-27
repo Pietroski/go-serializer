@@ -319,34 +319,36 @@ func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Val
 
 	for i := 0; i < fLen; i++ {
 		f := field.Index(i)
-		if f.Type().Kind() != reflect.Slice && f.Type().Kind() != reflect.Array {
-			if f.Kind() == reflect.Ptr {
-				if f.IsNil() {
-					bbw.put(1)
-					continue
-				}
 
-				bbw.put(0)
-				f = f.Elem()
-			}
-
-			if f.Kind() == reflect.Struct {
-				s.structEncode(bbw, &f)
+		if f.Kind() == reflect.Ptr {
+			if f.IsNil() {
+				bbw.put(1)
 				continue
 			}
 
-			if f.Kind() == reflect.Map {
-				s.mapEncode(bbw, &f)
-				continue
-			}
+			bbw.put(0)
+			f = f.Elem()
+		}
 
-			// this is always a primitive
-			s.serializePrimitive(bbw, f.Interface())
+		if f.Kind() == reflect.Struct {
+			s.structEncode(bbw, &f)
 			continue
 		}
 
-		// if it is an slice or array
-		bbw.write(s.encode(f.Interface()))
+		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
+			// if it is an slice or array
+			bbw.write(s.encode(f.Interface()))
+			continue
+		}
+
+		if f.Kind() == reflect.Map {
+			s.mapEncode(bbw, &f)
+			continue
+		}
+
+		// this is always a primitive
+		s.serializePrimitive(bbw, f.Interface())
+		continue
 	}
 }
 
@@ -358,9 +360,8 @@ func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Val
 	for i := uint32(0); i < length; i++ {
 		f := field.Index(int(i))
 
-		if isPrimitive(f.Interface()) {
+		if isReflectPrimitive(f.Kind()) {
 			s.deserializePrimitive(bbr, &f)
-
 			continue
 		}
 
@@ -461,9 +462,6 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
 		}
 
 		return
-	}
-
-	switch field.Interface().(type) {
 	case map[interface{}]interface{}:
 		for _, key := range field.MapKeys() {
 			// key
@@ -539,9 +537,6 @@ func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
-	}
-
-	switch field.Interface().(type) {
 	case map[interface{}]interface{}:
 		// temporary map to decode
 		tmtd := make(map[interface{}]interface{}, length)
