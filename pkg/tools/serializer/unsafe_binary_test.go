@@ -7,55 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type (
-	TestData struct {
-		FieldStr  string
-		FieldInt  int8
-		FieldBool bool
-
-		FieldStrPtr    *string
-		FieldIntPtr    *int
-		FieldBoolPtr   *bool
-		SubTestData    SubTestData
-		SubTestDataPtr *SubTestData
-		SliceTestData  SliceTestData
-		MapTestData    MapTestData
-	}
-
-	SubTestData struct {
-		FieldStr   string
-		FieldInt32 int32
-		FieldBool  bool
-		FieldInt64 int64
-		FieldInt   int
-	}
-
-	SliceTestData struct {
-		IntList          []int
-		IntIntList       [][]int
-		ThreeDIntList    [][][]int
-		StrList          []string
-		StrStrList       [][]string
-		StructList       []SliceItem
-		PtrStructList    []*SliceItem
-		PtrStructNilList []*SliceItem
-	}
-
-	MapTestData struct {
-		Int64KeyMapInt64Value map[int64]int64
-		StrKeyMapStrValue     map[string]string
-	}
-
-	SliceItem struct {
-		Int  int
-		Str  string
-		Bool bool
-	}
-)
-
-func TestBinarySerializer_Marshal(t *testing.T) {
+func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		intPtr := 7
 		strPtr := "test-str-ptr"
@@ -95,13 +49,12 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Log(td)
-		t.Log(*td.FieldIntPtr)
 		t.Log(*td.FieldStrPtr)
 		t.Log(*td.SubTestDataPtr)
 	})
 
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		strPtr := "test-str-ptr"
 		testData := TestData{
@@ -133,7 +86,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -161,7 +114,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		bs, err := serializer.Marshal("test-again#$çcçá")
 		require.NoError(t, err)
@@ -176,7 +129,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success SliceTestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -271,7 +224,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success SliceTestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		testData := TestData{
 			SliceTestData: SliceTestData{
@@ -313,7 +266,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success MapTestData", func(t *testing.T) {
-		serializer := NewBinarySerializer()
+		serializer := NewUnsafeBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -351,153 +304,10 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 	})
 }
 
-//type bsReader struct {
-//	cursor int
-//}
-//
-//func (bsr *bsReader) readBytes(bs []byte, n int) []byte {
-//	bbs := make([]byte, n)
-//	for i := 0; i < n; i++ {
-//		bs[i] = bs[bsr.cursor+i]
-//	}
-//
-//	bsr.cursor += n
-//	return bbs
-//}
-//
-//func Benchmark_BinaryBytesReader(b *testing.B) {
-//	bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//
-//	b.Run("1", func(b *testing.B) {
-//		for i := 0; i < b.N; i++ {
-//			bbr := newBufferReader(bs)
-//			_ = bbr.readBytes(10)
-//		}
-//	})
-//
-//	b.Run("1", func(b *testing.B) {
-//		for i := 0; i < b.N; i++ {
-//			bbr := newBufferReader(bs)
-//			_ = bbr.readBytes(10)
-//		}
-//	})
-//}
-
-// Benchmark_BinaryBytesReader
-//
-// goos: darwin
-// goarch: arm64
-// pkg: gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer
-// cpu: Apple M2 Max
-// Benchmark_BinaryBytesReader
-// Benchmark_BinaryBytesReader/1
-// Benchmark_BinaryBytesReader/1-12  	78567452	        14.16 ns/op
-// Benchmark_BinaryBytesReader/2
-// Benchmark_BinaryBytesReader/2-12  	65064895	        18.32 ns/op
-// Benchmark_BinaryBytesReader/2#01
-// Benchmark_BinaryBytesReader/2#01-12         	65056516	        18.20 ns/op
-//
-//	func Benchmark_BinaryBytesReader(b *testing.B) {
-//		b.Run("1", func(b *testing.B) {
-//			for i := 0; i < b.N; i++ {
-//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//				nbs := make([]byte, cap(bs)<<1)
-//				copy(nbs, bs)
-//				bs = nbs
-//			}
-//		})
-//
-//		b.Run("2", func(b *testing.B) {
-//			for i := 0; i < b.N; i++ {
-//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//				nbs := make([]byte, cap(bs)<<1)
-//				for idx, n := range bs {
-//					nbs[idx] = n
-//				}
-//				bs = nbs
-//			}
-//		})
-//
-//		b.Run("2", func(b *testing.B) {
-//			for i := 0; i < b.N; i++ {
-//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//				nbs := make([]byte, cap(bs)<<1)
-//				limit := len(bs)
-//				for idx := 0; idx < limit; idx++ {
-//					nbs[idx] = bs[idx]
-//				}
-//				bs = nbs
-//			}
-//		})
-//	}
-//
-//	func Benchmark_BinaryBytesReader(b *testing.B) {
-//		b.Run("1", func(b *testing.B) {
-//			for i := 0; i < b.N; i++ {
-//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//				nbs := make([]byte, cap(bs)<<1)
-//				copy(nbs, bs[3:7])
-//				bs = nbs
-//			}
-//		})
-//
-//		cursor := 3
-//		b.Run("2", func(b *testing.B) {
-//			for i := 0; i < b.N; i++ {
-//				bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//				nbs := make([]byte, cap(bs)<<1)
-//				limit := 4
-//				for idx := 0; idx < limit; idx++ {
-//					nbs[idx] = bs[cursor+idx]
-//				}
-//				bs = nbs
-//			}
-//		})
-//	}
-//
-//	func Test_BSReader(t *testing.T) {
-//		t.Log(1 << 4)
-//		bbr := newBytesWriter(make([]byte, 0, 1<<4))
-//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-//		bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-//		bbr.write(bs)
-//		t.Log(bbr.bytes())
-//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-//		nbs := []byte{10, 9, 8, 7, 6, 5}
-//		bbr.write(nbs)
-//		t.Log(bbr.bytes())
-//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-//		bbr.write(nbs)
-//		t.Log(bbr.bytes())
-//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-//		bbr.write([]byte{0, 0, 0, 0})
-//		t.Log(bbr.bytes())
-//		t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-//	}
-func Test_BSReader(t *testing.T) {
-	t.Log(1 << 4)
-	bbr := newBytesWriter(make([]byte, 1<<4))
-	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-	bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-	bbr.write(bs)
-	t.Log(bbr.bytes())
-	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-	nbs := []byte{10, 9, 8, 7, 6, 5}
-	bbr.write(nbs)
-	t.Log(bbr.bytes())
-	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-	bbr.write(nbs)
-	t.Log(bbr.bytes())
-	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-	bbr.write([]byte{0, 0, 0, 0})
-	t.Log(bbr.bytes())
-	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
-}
-
-func Test_Benchmark_Data(t *testing.T) {
+func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
 	t.Run("success MapTestData", func(t *testing.T) {
 		t.Run("map of int to int", func(t *testing.T) {
-			serializer := NewBinarySerializer()
+			serializer := NewUnsafeBinarySerializer()
 
 			msg := MapTestData{
 				Int64KeyMapInt64Value: map[int64]int64{
@@ -529,7 +339,7 @@ func Test_Benchmark_Data(t *testing.T) {
 		})
 
 		t.Run("map of string to string", func(t *testing.T) {
-			serializer := NewBinarySerializer()
+			serializer := NewUnsafeBinarySerializer()
 
 			msg := MapTestData{
 				StrKeyMapStrValue: map[string]string{

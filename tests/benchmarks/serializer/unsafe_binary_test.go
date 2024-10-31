@@ -1,29 +1,31 @@
 package serializer
 
 import (
+	"fmt"
 	"math"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/stretchr/testify/require"
 
-	grpc_item "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/generated/go/pkg/item"
+	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
 	go_serializer "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer"
 )
 
-func Benchmark_ProtoSerializer(b *testing.B) {
-	b.Run("proto serialization", func(b *testing.B) {
-		msg := &grpc_item.Item{
+func Benchmark_UnsafeBinarySerializer(b *testing.B) {
+	b.Run("binary serialization", func(b *testing.B) {
+		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
 			Number: 5_000_000_000,
-			SubItem: &grpc_item.SubItem{
+			SubItem: &item_models.SubItem{
 				Date:     time.Now().Unix(),
 				Amount:   1_000_000_000,
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewProtoSerializer()
+		serializer := go_serializer.NewUnsafeBinarySerializer()
 		var err error
 		for i := 0; i < b.N; i++ {
 			_, err = serializer.Serialize(msg)
@@ -31,43 +33,43 @@ func Benchmark_ProtoSerializer(b *testing.B) {
 		require.NoError(b, err)
 	})
 
-	b.Run("proto deserialization", func(b *testing.B) {
-		msg := &grpc_item.Item{
+	b.Run("binary deserialization", func(b *testing.B) {
+		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
 			Number: 5_000_000_000,
-			SubItem: &grpc_item.SubItem{
+			SubItem: &item_models.SubItem{
 				Date:     time.Now().Unix(),
 				Amount:   1_000_000_000,
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewProtoSerializer()
+		serializer := go_serializer.NewUnsafeBinarySerializer()
 		bs, err := serializer.Serialize(msg)
 		require.NoError(b, err)
 
-		var target grpc_item.Item
+		var target item_models.Item
 		for i := 0; i < b.N; i++ {
 			err = serializer.Deserialize(bs, &target)
 		}
 		require.NoError(b, err)
-		validateMsgAndTarget(b, msg, &target)
+		validateStructMsgAndTarget(b, msg, &target)
 	})
 
-	b.Run("proto serialization and deserialization - clean - no validation", func(b *testing.B) {
-		msg := &grpc_item.Item{
+	b.Run("binary serialization and deserialization", func(b *testing.B) {
+		msg := &item_models.Item{
 			Id:     "any-item",
 			ItemId: 100,
 			Number: 5_000_000_000,
-			SubItem: &grpc_item.SubItem{
+			SubItem: &item_models.SubItem{
 				Date:     time.Now().Unix(),
 				Amount:   1_000_000_000,
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewProtoSerializer()
+		serializer := go_serializer.NewUnsafeBinarySerializer()
 
-		var target grpc_item.Item
+		var target item_models.Item
 		for i := 0; i < b.N; i++ {
 			bs, _ := serializer.Serialize(msg)
 			_ = serializer.Deserialize(bs, &target)
@@ -75,13 +77,91 @@ func Benchmark_ProtoSerializer(b *testing.B) {
 	})
 }
 
-func BenchmarkType_ProtoSerializer(b *testing.B) {
+func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
+	b.Run("string serialization", func(b *testing.B) {
+		serializer := go_serializer.NewUnsafeBinarySerializer()
+
+		msg := "test-again#$çcçá"
+
+		b.Run("encoding", func(b *testing.B) {
+			var bs []byte
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+			}
+
+			var target string
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+		})
+
+		b.Run("decoding", func(b *testing.B) {
+			bs, _ := serializer.Serialize(msg)
+
+			var target string
+			for i := 0; i < b.N; i++ {
+				_ = serializer.Deserialize(bs, &target)
+			}
+			b.Log(target)
+		})
+
+		b.Run("encoding - decoding", func(b *testing.B) {
+			var target string
+			bs, _ := serializer.Serialize(msg)
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+			}
+		})
+	})
+
+	b.Run("int serialization", func(b *testing.B) {
+		serializer := go_serializer.NewUnsafeBinarySerializer()
+
+		msg := uint64(math.MaxUint64)
+
+		b.Run("encoding", func(b *testing.B) {
+			var bs []byte
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+			}
+
+			var target uint64
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+		})
+
+		b.Run("decoding", func(b *testing.B) {
+			bs, _ := serializer.Serialize(msg)
+
+			var target uint64
+			for i := 0; i < b.N; i++ {
+				_ = serializer.Deserialize(bs, &target)
+			}
+			b.Log(target)
+		})
+
+		b.Run("encoding - decoding", func(b *testing.B) {
+			var target uint64
+			bs, _ := serializer.Serialize(msg)
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+			}
+		})
+	})
+
 	b.Run("slice serialization", func(b *testing.B) {
 		b.Run("slice of int", func(b *testing.B) {
-			msg := &grpc_item.SliceTestData{
-				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			msg := SliceTestData{
+				IntList: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			}
-			serializer := go_serializer.NewProtoSerializer()
+			serializer := go_serializer.NewUnsafeBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -89,7 +169,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target grpc_item.SliceTestData
+				var target SliceTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -97,7 +177,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target grpc_item.SliceTestData
+				var target SliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -105,7 +185,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
-				var target grpc_item.SliceTestData
+				var target SliceTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
@@ -124,7 +204,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					{10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewUnsafeBinarySerializer()
 
 			b.Run("int slice - encoding", func(b *testing.B) {
 				var bs []byte
@@ -173,7 +253,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					},
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewUnsafeBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -223,7 +303,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					1_000: math.MaxInt64,
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewUnsafeBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -266,7 +346,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					"any-other-key": "any-other-value",
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewUnsafeBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -304,11 +384,56 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 	})
 }
 
-func validateMsgAndTarget(b *testing.B, msg, target *grpc_item.Item) {
-	require.Equal(b, msg.Id, target.Id)
-	require.Equal(b, msg.ItemId, target.ItemId)
-	require.Equal(b, msg.Number, target.Number)
-	require.Equal(b, msg.SubItem.Date, target.SubItem.Date)
-	require.Equal(b, msg.SubItem.Amount, target.SubItem.Amount)
-	require.Equal(b, msg.SubItem.ItemCode, target.SubItem.ItemCode)
+func Benchmark_Operation(b *testing.B) {
+	b.Run("", func(b *testing.B) {
+		var abs [8]byte
+		i64 := int64(100)
+
+		var i64Value int64
+		for i := 0; i < b.N; i++ {
+			*(*int64)(unsafe.Pointer(&abs)) = i64
+			i64Value = *(*int64)(unsafe.Pointer(&abs[0]))
+		}
+
+		fmt.Println(i64Value)
+	})
+
+	b.Run("", func(b *testing.B) {
+		bs := make([]byte, 8)
+		i64 := int64(100)
+
+		var i64Value int64
+		for i := 0; i < b.N; i++ {
+			go_serializer.PutUint64(bs, uint64(i64))
+			i64Value = int64(go_serializer.Uint64(bs))
+		}
+
+		fmt.Println(i64Value)
+	})
+
+	b.Run("", func(b *testing.B) {
+		var abs [8]byte
+		i64 := uint64(100)
+
+		var i64Value uint64
+		for i := 0; i < b.N; i++ {
+			*(*uint64)(unsafe.Pointer(&abs)) = i64
+			i64Value = *(*uint64)(unsafe.Pointer(&abs[0]))
+		}
+
+		fmt.Println(i64Value)
+	})
+
+	b.Run("", func(b *testing.B) {
+		bs := make([]byte, 8)
+		i64 := uint64(100)
+
+		var i64Value uint64
+		for i := 0; i < b.N; i++ {
+			go_serializer.PutUint64(bs, i64)
+			i64Value = go_serializer.Uint64(bs)
+		}
+
+		fmt.Println(i64Value)
+	})
 }

@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var file_item_item_messages_proto_rawDesc = []byte{
 	0x0a, 0x18, 0x69, 0x74, 0x65, 0x6d, 0x2f, 0x69, 0x74, 0x65, 0x6d, 0x2e, 0x6d, 0x65, 0x73, 0x73,
@@ -109,4 +111,16 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 	fmt.Printf("%s", file_item_error_item_messages_proto_rawDesc)
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	v := 256
+	fmt.Println(v)
+	fmt.Println(v < 1<<7)
+	fmt.Println(v < 1<<14)
+	fmt.Println(v < 1<<21)
+	fmt.Println(v < 1<<28)
+	fmt.Println((v>>0)&0x7f | 0x80)
+	fmt.Println((v>>7)&0x7f | 0x80)
+	fmt.Println(v >> 14)
 }
