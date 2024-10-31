@@ -28,3 +28,22 @@ message AnotherItem {
   int64 number = 3;
   AnotherSubItem subItem = 6;
 }
+
+message SliceTestData {
+  repeated int64 int_list = 1;
+  repeated string str_list = 2;
+  repeated SliceItem struct_list = 3;
+  repeated SliceItem struct_nil_list = 4;
+  repeated bytes bytes_bytes_list = 5;
+}
+
+message SliceItem {
+  int64 int = 1;
+  string str = 2;
+  bool bool = 3;
+}
+
+message MapTestData {
+  map<int64, int64> int64_key_map_int64_value = 1;
+  map<string, string> str_key_map_str_value = 2;
+}

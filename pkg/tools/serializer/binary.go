@@ -618,186 +618,6 @@ func decodeRune(bbr *bytesReader) string {
 }
 
 // ################################################################################################################## \\
-// map type mappings
-// ################################################################################################################## \\
-
-const (
-	reflectMapType = iota
-	intIntMapType
-	int64Int64MapType
-	intInterfaceMapType
-	int64InterfaceMapType
-	stringStringMapType
-	stringInterfaceMapType
-)
-
-func getMapType(field *reflect.Value) uint8 {
-	switch field.Interface().(type) {
-	case map[int]int:
-		return intIntMapType
-	case map[int64]int64:
-		return int64Int64MapType
-	case map[int]interface{}:
-		return intInterfaceMapType
-	case map[int64]interface{}:
-		return int64InterfaceMapType
-	case map[string]string:
-		return stringStringMapType
-	case map[string]interface{}:
-		return stringInterfaceMapType
-	}
-
-	return reflectMapType
-}
-
-func fromMapType(mapType byte, length int) reflect.Value {
-	switch mapType {
-	case intIntMapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[int]int{}), length)
-	case int64Int64MapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[int64]int64{}), length)
-	case intInterfaceMapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[int]interface{}{}), length)
-	case int64InterfaceMapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[int64]interface{}{}), length)
-	case stringStringMapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[string]string{}), length)
-	case stringInterfaceMapType:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[string]interface{}{}), length)
-	default:
-		return reflect.MakeMapWithSize(reflect.TypeOf(map[interface{}]interface{}{}), length)
-	}
-}
-
-func keyType(keyTypeMapping map[reflect.Kind]uint8, value reflect.Value) uint8 {
-	vk := value.Kind()
-	kt, ok := keyTypeMapping[vk]
-	if ok {
-		return kt
-	}
-
-	switch vk {
-	case reflect.String:
-		return 1
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return 2
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return 3
-	case reflect.Float32, reflect.Float64:
-		return 4
-	case reflect.Complex64, reflect.Complex128:
-		return 5
-	default:
-		return 0
-	}
-
-	//switch value {
-	//case reflect.String:
-	//	return stringKey
-	//case reflect.Int:
-	//	return intKey
-	//case reflect.Int8:
-	//	return int8Key
-	//case reflect.Int16:
-	//	return int16Key
-	//case reflect.Int32:
-	//	return int32Key
-	//case reflect.Int64:
-	//	return int64Key
-	//case reflect.Uint:
-	//	return uintKey
-	//case reflect.Uint8:
-	//	return uint8Key
-	//case reflect.Uint16:
-	//	return uint16Key
-	//case reflect.Uint32:
-	//	return uint32Key
-	//case reflect.Uint64:
-	//	return uint64Key
-	//case reflect.Float32:
-	//	return float32Key
-	//case reflect.Float64:
-	//	return float64Key
-	//}
-}
-
-func fromKeyType(keyTypeMapping map[uint8]reflect.Kind, kt uint8) reflect.Kind {
-	kind, ok := keyTypeMapping[kt]
-	if ok {
-		return kind
-	}
-
-	switch kt {
-	case 0:
-		return reflect.Kind(0)
-	case 1:
-		return reflect.String
-	case 2:
-		return reflect.Int64
-	case 3:
-		return reflect.Uint64
-	case 4:
-		return reflect.Float64
-	case 5:
-		return reflect.Complex128
-	}
-
-	return reflect.Kind(0)
-}
-
-const (
-	stringKey uint8 = 1 + iota
-	intKey
-	int8Key
-	int16Key
-	int32Key
-	int64Key
-	uintKey
-	uint8Key
-	uint16Key
-	uint32Key
-	uint64Key
-	float32Key
-	float64Key
-)
-
-const (
-	stringValue uint16 = 1 + iota
-	intValue
-	int8Value
-	int16Value
-	int32Value
-	int64Value
-	uintValue
-	uint8Value
-	uint16Value
-	uint32Value
-	uint64Value
-	float32Value
-	float64Value
-	complex64Value
-	complex128Value
-	uintptrValue
-	intSliceValue
-	int8SliceValue
-	int16SliceValue
-	int32SliceValue
-	int64SliceValue
-	uintSliceValue
-	uint8SliceValue
-	uint16SliceValue
-	uint32SliceValue
-	uint64SliceValue
-	float32SliceValue
-	float64SliceValue
-	complex64SliceValue
-	complex128SliceValue
-	uintptrSliceValue
-	structValue
-	mapValue
-)
-
-// ################################################################################################################## \\
 // bytes reader & bytes writer
 // ################################################################################################################## \\
 
@@ -968,4 +788,17 @@ func PutUint64(b []byte, v uint64) {
 	b[5] = byte(v >> 40)
 	b[6] = byte(v >> 48)
 	b[7] = byte(v >> 56)
+}
+
+func AppendUint64(b []byte, v uint64) []byte {
+	return append(b,
+		byte(v),
+		byte(v>>8),
+		byte(v>>16),
+		byte(v>>24),
+		byte(v>>32),
+		byte(v>>40),
+		byte(v>>48),
+		byte(v>>56),
+	)
 }
