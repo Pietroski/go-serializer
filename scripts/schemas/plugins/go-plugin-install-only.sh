@@ -1,5 +1,8 @@
 ##!/usr/bin/env bash
 
+go mod tidy
+go mod vendor
+
 go install google.golang.org/grpc \
 	google.golang.org/protobuf/proto \
 	google.golang.org/protobuf/cmd/protoc-gen-go \
@@ -9,4 +12,8 @@ go install google.golang.org/grpc \
 	google.golang.org/protobuf/reflect/protoreflect \
     google.golang.org/protobuf/runtime/protoimpl
 
-source $GOPATH
+go mod tidy
+go mod vendor
+
+# shellcheck disable=SC1090
+source "$GOPATH"

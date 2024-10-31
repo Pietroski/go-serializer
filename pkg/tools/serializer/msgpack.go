@@ -12,7 +12,7 @@ func NewMsgPackSerializer() Serializer {
 	return &msgpackSerializer{}
 }
 
-func (m msgpackSerializer) Serialize(payload interface{}) ([]byte, error) {
+func (s *msgpackSerializer) Serialize(payload interface{}) ([]byte, error) {
 	bs, err := msgpack.Marshal(payload)
 	if err != nil {
 		return []byte{}, error_builder.Err(EncodeErrMsg, err)
@@ -21,7 +21,7 @@ func (m msgpackSerializer) Serialize(payload interface{}) ([]byte, error) {
 	return bs, nil
 }
 
-func (m msgpackSerializer) Deserialize(payload []byte, target interface{}) error {
+func (s *msgpackSerializer) Deserialize(payload []byte, target interface{}) error {
 	if err := msgpack.Unmarshal(payload, target); err != nil {
 		return error_builder.Err(DecodeErrMsg, err)
 	}
