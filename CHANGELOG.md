@@ -1,6 +1,33 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ - [gitea/main, gitea/HEAD) - Merge pull request 'feat/binary-serializer' (#1] from feat/binary-serializer into main
+ - [gitea/feat/binary-serializer] - feat: blazingly fucking freaking phenomenally fast binary serializer
+ - feat: benchmarks
+ - feat: binary serializer
+ - wip: binary serialzier
+ - feat: code cleanup
+ - feat: binary serializer huge performance improvements
+ - feat: blazingly fast binary serializer
+ - wip: blazingly fast binary serializer
+ - wip: binary serializer
+ - wip: binary serializer
+ - wip: binary serializer map encoder
+ - feat: binary serialzier
+ - wip: binary serializer
+ - wip: binary serializer
+ - wip: binary serializer
+ - wip: binary serializer v2
+ - wip: binary serializer v2
+ - wip: binary serializer v2
+ - wip: binary serializer code cleanup
+ - wip: binary serializer code cleanup
+ - wip: binary serializer code cleanup
+ - wip: binary serializer code cleanup
+ - wip: binary serializer code cleanup
+ - wip: binary serializer code cleanup deletion
+ - wip: binary serializer code cleanup
+ - wip: binary serializer
  
 # [v1.1.19]
  - refactor: mock deps
