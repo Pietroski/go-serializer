@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.1.20]
  - [gitea/main, gitea/HEAD) - Merge pull request 'feat/binary-serializer' (#1] from feat/binary-serializer into main
  - [gitea/feat/binary-serializer] - feat: blazingly fucking freaking phenomenally fast binary serializer
  - feat: benchmarks
