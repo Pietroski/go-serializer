@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v1.2.0]
  - chore: unsafe binary serializer rename to raw binary serialzier
  
 # [v1.1.21]
