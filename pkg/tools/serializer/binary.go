@@ -1,6 +1,7 @@
 package go_serializer
 
 import (
+	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 	"math"
 	"reflect"
 )
@@ -21,6 +22,19 @@ func (s *BinarySerializer) Serialize(data interface{}) ([]byte, error) {
 
 func (s *BinarySerializer) Deserialize(data []byte, target interface{}) error {
 	s.decode(data, target)
+	return nil
+}
+
+func (s *BinarySerializer) DataRebind(payload interface{}, target interface{}) error {
+	bs, err := s.Serialize(payload)
+	if err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	if err = s.Deserialize(bs, target); err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
 	return nil
 }
 

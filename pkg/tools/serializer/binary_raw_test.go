@@ -9,7 +9,7 @@ import (
 
 func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		intPtr := 7
 		strPtr := "test-str-ptr"
@@ -54,7 +54,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		strPtr := "test-str-ptr"
 		testData := TestData{
@@ -86,7 +86,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success TestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -114,7 +114,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		bs, err := serializer.Marshal("test-again#$çcçá")
 		require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success SliceTestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -224,7 +224,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success SliceTestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		testData := TestData{
 			SliceTestData: SliceTestData{
@@ -266,7 +266,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("success MapTestData", func(t *testing.T) {
-		serializer := NewUnsafeBinarySerializer()
+		serializer := NewRawBinarySerializer()
 
 		testData := TestData{
 			FieldStr:  "test-data",
@@ -307,7 +307,7 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
 	t.Run("success MapTestData", func(t *testing.T) {
 		t.Run("map of int to int", func(t *testing.T) {
-			serializer := NewUnsafeBinarySerializer()
+			serializer := NewRawBinarySerializer()
 
 			msg := MapTestData{
 				Int64KeyMapInt64Value: map[int64]int64{
@@ -339,7 +339,7 @@ func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
 		})
 
 		t.Run("map of string to string", func(t *testing.T) {
-			serializer := NewUnsafeBinarySerializer()
+			serializer := NewRawBinarySerializer()
 
 			msg := MapTestData{
 				StrKeyMapStrValue: map[string]string{

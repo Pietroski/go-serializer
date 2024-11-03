@@ -4,24 +4,39 @@ import (
 	"math"
 	"reflect"
 	"unsafe"
+
+	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
-type UnsafeBinarySerializer struct{}
+type RawBinarySerializer struct{}
 
-func NewUnsafeBinarySerializer() *UnsafeBinarySerializer {
-	return &UnsafeBinarySerializer{}
+func NewRawBinarySerializer() *RawBinarySerializer {
+	return &RawBinarySerializer{}
 }
 
 // ################################################################################################################## \\
 // serializer interface implementation
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) Serialize(data interface{}) ([]byte, error) {
+func (s *RawBinarySerializer) Serialize(data interface{}) ([]byte, error) {
 	return s.encode(data), nil
 }
 
-func (s *UnsafeBinarySerializer) Deserialize(data []byte, target interface{}) error {
+func (s *RawBinarySerializer) Deserialize(data []byte, target interface{}) error {
 	s.decode(data, target)
+	return nil
+}
+
+func (s *RawBinarySerializer) DataRebind(payload interface{}, target interface{}) error {
+	bs, err := s.Serialize(payload)
+	if err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
+	if err = s.Deserialize(bs, target); err != nil {
+		return error_builder.Err(RebinderErrMsg, err)
+	}
+
 	return nil
 }
 
@@ -29,11 +44,11 @@ func (s *UnsafeBinarySerializer) Deserialize(data []byte, target interface{}) er
 // encoding interface implementation
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) Marshal(data interface{}) ([]byte, error) {
+func (s *RawBinarySerializer) Marshal(data interface{}) ([]byte, error) {
 	return s.Serialize(data)
 }
 
-func (s *UnsafeBinarySerializer) Unmarshal(data []byte, target interface{}) error {
+func (s *RawBinarySerializer) Unmarshal(data []byte, target interface{}) error {
 	return s.Deserialize(data, target)
 }
 
@@ -41,7 +56,7 @@ func (s *UnsafeBinarySerializer) Unmarshal(data []byte, target interface{}) erro
 // private encoder implementation
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) encode(data interface{}) []byte {
+func (s *RawBinarySerializer) encode(data interface{}) []byte {
 	bbw := newBytesWriter(make([]byte, 1<<5))
 
 	if isPrimitive(data) {
@@ -77,7 +92,7 @@ func (s *UnsafeBinarySerializer) encode(data interface{}) []byte {
 	return bbw.bytes()
 }
 
-func (s *UnsafeBinarySerializer) decode(data []byte, target interface{}) int {
+func (s *RawBinarySerializer) decode(data []byte, target interface{}) int {
 	bbr := newBytesReader(data)
 
 	value := reflect.ValueOf(target)
@@ -113,7 +128,7 @@ func (s *UnsafeBinarySerializer) decode(data []byte, target interface{}) int {
 // primitive encoder
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) serializePrimitive(bbw *bytesWriter, data interface{}) {
+func (s *RawBinarySerializer) serializePrimitive(bbw *bytesWriter, data interface{}) {
 	switch v := data.(type) {
 	case bool:
 		if v {
@@ -190,7 +205,7 @@ func (s *UnsafeBinarySerializer) serializePrimitive(bbw *bytesWriter, data inter
 	}
 }
 
-func (s *UnsafeBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *reflect.Value) {
+func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *reflect.Value) {
 	switch v.Kind() {
 	case reflect.Bool:
 		if v.Bool() {
@@ -268,7 +283,7 @@ func (s *UnsafeBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *
 	}
 }
 
-func (s *UnsafeBinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.Value) {
+func (s *RawBinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.Value) {
 	switch field.Kind() {
 	case reflect.String:
 		field.SetString(s.decodeUnsafeString(br))
@@ -318,7 +333,7 @@ func (s *UnsafeBinarySerializer) deserializePrimitive(br *bytesReader, field *re
 // struct encoder
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) {
+func (s *RawBinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Value) {
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
@@ -352,7 +367,7 @@ func (s *UnsafeBinarySerializer) structEncode(bbw *bytesWriter, field *reflect.V
 	}
 }
 
-func (s *UnsafeBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) {
+func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Value) {
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
@@ -389,7 +404,7 @@ func (s *UnsafeBinarySerializer) structDecode(bbr *bytesReader, field *reflect.V
 // slice & array encoder
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
+func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
 
 	bs := make([]byte, 4)
@@ -431,7 +446,7 @@ func (s *UnsafeBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *refle
 	}
 }
 
-func (s *UnsafeBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
+func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
 	length := Uint32(bbr.read(4))
 
 	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
@@ -475,7 +490,7 @@ func (s *UnsafeBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *refle
 // map encoder
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
+func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
 	// map's length
 	fLen := field.Len()
 	bs := make([]byte, 4)
@@ -564,7 +579,7 @@ func (s *UnsafeBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Valu
 	}
 }
 
-func (s *UnsafeBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
+func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 	length := Uint32(bbr.read(4))
 
 	switch field.Interface().(type) {
@@ -645,7 +660,7 @@ func (s *UnsafeBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Valu
 // string unsafe encoder
 // ################################################################################################################## \\
 
-func (s *UnsafeBinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string) {
+func (s *RawBinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string) {
 	bs := make([]byte, 4)
 	PutUint32(bs, uint32(len(str)))
 	bbw.write(bs)
@@ -653,7 +668,7 @@ func (s *UnsafeBinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string
 	bbw.write(unsafe.Slice(unsafe.StringData(str), len(str))) // []byte(str)
 }
 
-func (s *UnsafeBinarySerializer) decodeUnsafeString(bbr *bytesReader) string {
+func (s *RawBinarySerializer) decodeUnsafeString(bbr *bytesReader) string {
 	bs := bbr.read(int(Uint32(bbr.read(4))))
 	return unsafe.String(unsafe.SliceData(bs), len(bs))
 }

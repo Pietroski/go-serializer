@@ -25,7 +25,7 @@ func Benchmark_UnsafeBinarySerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewUnsafeBinarySerializer()
+		serializer := go_serializer.NewRawBinarySerializer()
 		var err error
 		for i := 0; i < b.N; i++ {
 			_, err = serializer.Serialize(msg)
@@ -44,7 +44,7 @@ func Benchmark_UnsafeBinarySerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewUnsafeBinarySerializer()
+		serializer := go_serializer.NewRawBinarySerializer()
 		bs, err := serializer.Serialize(msg)
 		require.NoError(b, err)
 
@@ -67,7 +67,7 @@ func Benchmark_UnsafeBinarySerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewUnsafeBinarySerializer()
+		serializer := go_serializer.NewRawBinarySerializer()
 
 		var target item_models.Item
 		for i := 0; i < b.N; i++ {
@@ -79,7 +79,7 @@ func Benchmark_UnsafeBinarySerializer(b *testing.B) {
 
 func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 	b.Run("string serialization", func(b *testing.B) {
-		serializer := go_serializer.NewUnsafeBinarySerializer()
+		serializer := go_serializer.NewRawBinarySerializer()
 
 		msg := "test-again#$çcçá"
 
@@ -118,7 +118,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 	})
 
 	b.Run("int serialization", func(b *testing.B) {
-		serializer := go_serializer.NewUnsafeBinarySerializer()
+		serializer := go_serializer.NewRawBinarySerializer()
 
 		msg := uint64(math.MaxUint64)
 
@@ -161,7 +161,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 			msg := SliceTestData{
 				IntList: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			}
-			serializer := go_serializer.NewUnsafeBinarySerializer()
+			serializer := go_serializer.NewRawBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -204,7 +204,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 					{10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
 				},
 			}
-			serializer := go_serializer.NewUnsafeBinarySerializer()
+			serializer := go_serializer.NewRawBinarySerializer()
 
 			b.Run("int slice - encoding", func(b *testing.B) {
 				var bs []byte
@@ -253,7 +253,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 					},
 				},
 			}
-			serializer := go_serializer.NewUnsafeBinarySerializer()
+			serializer := go_serializer.NewRawBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -303,7 +303,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 					1_000: math.MaxInt64,
 				},
 			}
-			serializer := go_serializer.NewUnsafeBinarySerializer()
+			serializer := go_serializer.NewRawBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -346,7 +346,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 					"any-other-key": "any-other-value",
 				},
 			}
-			serializer := go_serializer.NewUnsafeBinarySerializer()
+			serializer := go_serializer.NewRawBinarySerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
