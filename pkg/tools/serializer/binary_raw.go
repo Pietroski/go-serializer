@@ -283,48 +283,48 @@ func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *ref
 	}
 }
 
-func (s *RawBinarySerializer) deserializePrimitive(br *bytesReader, field *reflect.Value) {
+func (s *RawBinarySerializer) deserializePrimitive(bbr *bytesReader, field *reflect.Value) {
 	switch field.Kind() {
 	case reflect.String:
-		field.SetString(s.decodeUnsafeString(br))
+		field.SetString(s.decodeUnsafeString(bbr))
 	case reflect.Bool:
-		field.SetBool(br.next() == 1)
+		field.SetBool(bbr.next() == 1)
 	case reflect.Int:
-		field.SetInt(int64(Uint64(br.read(8))))
+		field.SetInt(int64(Uint64(bbr.read(8))))
 	case reflect.Int8:
-		field.SetInt(int64(br.next()))
+		field.SetInt(int64(bbr.next()))
 	case reflect.Int16:
-		field.SetInt(int64(Uint16(br.read(2))))
+		field.SetInt(int64(Uint16(bbr.read(2))))
 	case reflect.Int32:
-		field.SetInt(int64(Uint32(br.read(4))))
+		field.SetInt(int64(Uint32(bbr.read(4))))
 	case reflect.Int64:
-		field.SetInt(int64(Uint64(br.read(8))))
+		field.SetInt(int64(Uint64(bbr.read(8))))
 	case reflect.Uint:
-		field.SetUint(Uint64(br.read(8)))
+		field.SetUint(Uint64(bbr.read(8)))
 	case reflect.Uint8:
-		field.SetUint(uint64(br.next()))
+		field.SetUint(uint64(bbr.next()))
 	case reflect.Uint16:
-		field.SetUint(uint64(Uint16(br.read(2))))
+		field.SetUint(uint64(Uint16(bbr.read(2))))
 	case reflect.Uint32:
-		field.SetUint(uint64(Uint32(br.read(4))))
+		field.SetUint(uint64(Uint32(bbr.read(4))))
 	case reflect.Uint64:
-		field.SetUint(Uint64(br.read(8)))
+		field.SetUint(Uint64(bbr.read(8)))
 	case reflect.Float32:
-		field.SetFloat(float64(math.Float32frombits(Uint32(br.read(4)))))
+		field.SetFloat(float64(math.Float32frombits(Uint32(bbr.read(4)))))
 	case reflect.Float64:
-		field.SetFloat(math.Float64frombits(Uint64(br.read(8))))
+		field.SetFloat(math.Float64frombits(Uint64(bbr.read(8))))
 	case reflect.Complex64:
 		field.SetComplex(complex(
-			float64(math.Float32frombits(Uint32(br.read(4)))),
-			float64(math.Float32frombits(Uint32(br.read(4)))),
+			float64(math.Float32frombits(Uint32(bbr.read(4)))),
+			float64(math.Float32frombits(Uint32(bbr.read(4)))),
 		))
 	case reflect.Complex128:
 		field.SetComplex(complex(
-			math.Float64frombits(Uint64(br.read(8))),
-			math.Float64frombits(Uint64(br.read(8))),
+			math.Float64frombits(Uint64(bbr.read(8))),
+			math.Float64frombits(Uint64(bbr.read(8))),
 		))
 	case reflect.Uintptr:
-		field.SetInt(int64(Uint64(br.read(8))))
+		field.SetInt(int64(Uint64(bbr.read(8))))
 	default:
 	}
 }
@@ -337,6 +337,7 @@ func (s *RawBinarySerializer) structEncode(bbw *bytesWriter, field *reflect.Valu
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
+
 		if f.Kind() == reflect.Ptr {
 			if f.IsNil() {
 				bbw.put(1)
@@ -371,6 +372,7 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 	limit := field.NumField()
 	for idx := 0; idx < limit; idx++ {
 		f := field.Field(idx)
+
 		if f.Kind() == reflect.Ptr {
 			// isItNil?
 			if bbr.next() == 1 {
@@ -406,10 +408,13 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 
 func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
-
 	bs := make([]byte, 4)
 	PutUint32(bs, uint32(fLen))
 	bbw.write(bs)
+
+	if fLen == 0 {
+		return
+	}
 
 	for i := 0; i < fLen; i++ {
 		f := field.Index(i)
@@ -448,6 +453,9 @@ func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.
 
 func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
 	length := Uint32(bbr.read(4))
+	if length == 0 {
+		return
+	}
 
 	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
 
@@ -465,7 +473,6 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.
 		}
 
 		if f.Kind() == reflect.Ptr {
-			// isItNil
 			if bbr.next() == 1 {
 				continue
 			}
@@ -491,11 +498,14 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.
 // ################################################################################################################## \\
 
 func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
-	// map's length
 	fLen := field.Len()
 	bs := make([]byte, 4)
 	PutUint32(bs, uint32(fLen))
 	bbw.write(bs)
+
+	if fLen == 0 {
+		return
+	}
 
 	switch rawFieldValue := field.Interface().(type) {
 	case map[int]int:
@@ -581,6 +591,9 @@ func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) 
 
 func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 	length := Uint32(bbr.read(4))
+	if length == 0 {
+		return
+	}
 
 	switch field.Interface().(type) {
 	case map[int]int:
@@ -661,14 +674,171 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) 
 // ################################################################################################################## \\
 
 func (s *RawBinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string) {
+	strLen := len(str)
 	bs := make([]byte, 4)
-	PutUint32(bs, uint32(len(str)))
+	PutUint32(bs, uint32(strLen))
 	bbw.write(bs)
-
-	bbw.write(unsafe.Slice(unsafe.StringData(str), len(str))) // []byte(str)
+	bbw.write(unsafe.Slice(unsafe.StringData(str), strLen))
 }
 
 func (s *RawBinarySerializer) decodeUnsafeString(bbr *bytesReader) string {
 	bs := bbr.read(int(Uint32(bbr.read(4))))
 	return unsafe.String(unsafe.SliceData(bs), len(bs))
+}
+
+// ################################################################################################################## \\
+// bytes reader & bytes writer
+// ################################################################################################################## \\
+
+type bytesReader struct {
+	data   []byte
+	cursor int
+}
+
+func newBytesReader(data []byte) *bytesReader {
+	return &bytesReader{
+		data: data,
+	}
+}
+
+func (bbr *bytesReader) next() byte {
+	bbr.cursor++
+	return bbr.data[bbr.cursor-1]
+}
+
+func (bbr *bytesReader) read(n int) []byte {
+	bs := bbr.data[bbr.cursor : bbr.cursor+n]
+
+	bbr.cursor += n
+	return bs
+}
+
+func (bbr *bytesReader) yield() int {
+	return bbr.cursor
+}
+
+func (bbr *bytesReader) skip(n int) {
+	bbr.cursor += n
+}
+
+func (bbr *bytesReader) bytes() []byte {
+	return bbr.data[:bbr.cursor]
+}
+
+func (bbr *bytesReader) bytesFromCursor() []byte {
+	return bbr.data[bbr.cursor:]
+}
+
+func (bbr *bytesReader) cutBytes() []byte {
+	bbr.data = bbr.data[bbr.cursor:]
+	bbr.cursor = 0
+	return bbr.data
+}
+
+type bytesWriter struct {
+	data   []byte
+	cursor int
+
+	freeCap int // cap(data) - len(data)
+}
+
+func newBytesWriter(data []byte) *bytesWriter {
+	bbw := &bytesWriter{
+		data:    data,
+		freeCap: cap(data) - len(data),
+	}
+	if bbw.freeCap == 0 {
+		bbw.freeCap = cap(data)
+	}
+	if len(data) == 0 {
+		bbw.data = bbw.data[:cap(data)]
+	}
+
+	return bbw
+}
+
+func (bbw *bytesWriter) put(b byte) {
+	if 1 >= bbw.freeCap {
+		newDataCap := cap(bbw.data) << 1
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	bbw.data[bbw.cursor] = b
+	bbw.cursor++
+	bbw.freeCap--
+}
+
+func (bbw *bytesWriter) write(bs []byte) {
+	bsLen := len(bs)
+	dataLimit := len(bbw.data)
+	dataCap := cap(bbw.data)
+
+	if bsLen > bbw.freeCap {
+		newDataCap := dataCap << 1
+		for dataLimit+bsLen-bbw.freeCap > newDataCap {
+			newDataCap <<= 1
+		}
+
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs)
+	bbw.cursor += bsLen
+	bbw.freeCap -= bsLen
+}
+
+func (bbw *bytesWriter) bytes() []byte {
+	return bbw.data[:bbw.cursor]
+}
+
+// ################################################################################################################## \\
+// binary little endian functions
+// ################################################################################################################## \\
+
+func Uint16(b []byte) uint16 {
+	_ = b[1] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint16(b[0]) | uint16(b[1])<<8
+}
+
+func PutUint16(b []byte, v uint16) {
+	_ = b[1] // early bounds check to guarantee safety of writes below
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+}
+
+func Uint32(b []byte) uint32 {
+	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
+}
+
+func PutUint32(b []byte, v uint32) {
+	_ = b[3] // early bounds check to guarantee safety of writes below
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+}
+
+func Uint64(b []byte) uint64 {
+	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
+		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
+}
+
+func PutUint64(b []byte, v uint64) {
+	_ = b[7] // early bounds check to guarantee safety of writes below
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	b[4] = byte(v >> 32)
+	b[5] = byte(v >> 40)
+	b[6] = byte(v >> 48)
+	b[7] = byte(v >> 56)
 }

@@ -3,8 +3,10 @@ package go_serializer
 import (
 	"math"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
 )
 
 func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
@@ -305,6 +307,46 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 }
 
 func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
+	t.Run("main benchmark test data", func(t *testing.T) {
+		msg := item_models.Item{
+			Id:     "any-item",
+			ItemId: 100,
+			Number: 5_000_000_000,
+			SubItem: &item_models.SubItem{
+				Date:     time.Now().Unix(),
+				Amount:   1_000_000_000,
+				ItemCode: "code-status",
+			},
+		}
+		serializer := NewRawBinarySerializer()
+
+		bs, err := serializer.Serialize(&msg)
+		require.NoError(t, err)
+
+		var td item_models.Item
+		err = serializer.Deserialize(bs, &td)
+		require.NoError(t, err)
+
+		t.Log(td)
+		t.Log(td.SubItem)
+	})
+
+	t.Run("slice serialization", func(t *testing.T) {
+		t.Run("slice of int", func(t *testing.T) {
+			msg := ProtoTypeSliceTestData{
+				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			}
+			serializer := NewRawBinarySerializer()
+
+			var target ProtoTypeSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
+	})
+
 	t.Run("success MapTestData", func(t *testing.T) {
 		t.Run("map of int to int", func(t *testing.T) {
 			serializer := NewRawBinarySerializer()

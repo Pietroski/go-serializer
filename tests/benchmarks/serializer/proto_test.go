@@ -106,8 +106,10 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 
 			b.Run("encode - decode", func(b *testing.B) {
 				var target grpc_item.SliceTestData
-				bs, _ := serializer.Serialize(msg)
-				_ = serializer.Deserialize(bs, &target)
+				bs, err := serializer.Serialize(msg)
+				require.NoError(b, err)
+				err = serializer.Deserialize(bs, &target)
+				require.NoError(b, err)
 				b.Log(target)
 
 				for i := 0; i < b.N; i++ {
@@ -212,7 +214,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 
 	b.Run("map serialization", func(b *testing.B) {
 		b.Run("map of int to int", func(b *testing.B) {
-			msg := MapTestData{
+			msg := &grpc_item.MapTestData{
 				Int64KeyMapInt64Value: map[int64]int64{
 					0:     100,
 					7:     2,
@@ -223,7 +225,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					1_000: math.MaxInt64,
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewProtoSerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -231,7 +233,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target MapTestData
+				var target grpc_item.MapTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -239,7 +241,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target MapTestData
+				var target grpc_item.MapTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -247,7 +249,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				var target MapTestData
+				var target grpc_item.MapTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
@@ -260,13 +262,13 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 		})
 
 		b.Run("map of string to string", func(b *testing.B) {
-			msg := MapTestData{
+			msg := &grpc_item.MapTestData{
 				StrKeyMapStrValue: map[string]string{
 					"any-key":       "any-value",
 					"any-other-key": "any-other-value",
 				},
 			}
-			serializer := go_serializer.NewBinarySerializer()
+			serializer := go_serializer.NewProtoSerializer()
 
 			b.Run("encoding", func(b *testing.B) {
 				var bs []byte
@@ -274,7 +276,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target MapTestData
+				var target grpc_item.MapTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -282,7 +284,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target MapTestData
+				var target grpc_item.MapTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -290,7 +292,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				var target MapTestData
+				var target grpc_item.MapTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)

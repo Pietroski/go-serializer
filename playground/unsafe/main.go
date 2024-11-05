@@ -4,6 +4,7 @@ import (
 	"fmt"
 	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
 	"math"
+	"reflect"
 	"time"
 )
 import "unsafe"
@@ -71,4 +72,27 @@ func main() {
 
 	*(*uint64)(unsafe.Pointer(&bs)) = math.MaxUint64
 	fmt.Println(*(*uint64)(unsafe.Pointer(&bs[0])))
+
+	field := reflect.ValueOf([]int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+	fLen := field.Len()
+	fmt.Println(fLen)
+
+	fmt.Println("START")
+	if field.Type().String() == "[]int64" {
+		//ii := field.Interface().([]int64)
+		//for _, i := range ii {
+		//	bs = make([]byte, 8)
+		//	PutUint64(bs, uint64(i))
+		//	bbw.write(bs)
+		//}
+		//return
+
+		ii := field.UnsafePointer()
+		iiLen := unsafe.Sizeof(ii)
+		for i := uintptr(0); i < uintptr(fLen); i++ {
+			fmt.Println(uint64(*(*int64)(unsafe.Pointer(uintptr(ii) + iiLen*i))))
+			fmt.Println(*(*uint64)(unsafe.Pointer(uintptr(ii) + iiLen*i)))
+		}
+	}
+	fmt.Println("FINISH")
 }

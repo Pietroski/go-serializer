@@ -158,8 +158,8 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 
 	b.Run("slice serialization", func(b *testing.B) {
 		b.Run("slice of int", func(b *testing.B) {
-			msg := SliceTestData{
-				IntList: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			msg := ProtoTypeSliceTestData{
+				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			}
 			serializer := go_serializer.NewRawBinarySerializer()
 
@@ -292,7 +292,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 
 	b.Run("map serialization", func(b *testing.B) {
 		b.Run("map of int to int", func(b *testing.B) {
-			msg := MapTestData{
+			msg := &MapTestData{
 				Int64KeyMapInt64Value: map[int64]int64{
 					0:     100,
 					7:     2,
