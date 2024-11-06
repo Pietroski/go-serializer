@@ -804,7 +804,6 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) 
 		field.Set(reflect.ValueOf(tmtd))
 		return
 	case map[interface{}]interface{}:
-		// temporary map to decode
 		tmtd := make(map[interface{}]interface{}, length)
 		for i := uint32(0); i < length; i++ {
 			var itrfcKey interface{}
@@ -815,16 +814,17 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) 
 		}
 		field.Set(reflect.ValueOf(tmtd))
 	default:
-		// temporary map to decode
-		tmtd := make(map[interface{}]interface{}, length)
-		for i := uint32(0); i < length; i++ {
+		field.Set(reflect.MakeMapWithSize(field.Type(), int(length)))
+		mapKeys := field.MapKeys()
+		for _, mapKey := range mapKeys {
 			var itrfcKey interface{}
 			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcKey))
+			mapKey.Set(reflect.ValueOf(itrfcKey))
+			mapValue := field.MapIndex(mapKey)
 			var itrfcType interface{}
 			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfcType))
-			tmtd[itrfcKey] = itrfcType
+			mapValue.Set(reflect.ValueOf(itrfcType))
 		}
-		field.Set(reflect.ValueOf(tmtd))
 	}
 }
 
