@@ -564,3 +564,157 @@ func Test_Benchmark_Data(t *testing.T) {
 		})
 	})
 }
+
+func Benchmark_BSReader(b *testing.B) {
+	v := uint64(math.MaxUint64)
+
+	b.Run("PutUint64", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			bs := make([]byte, 8)
+			PutUint64(bs, v)
+		}
+	})
+
+	b.Run("AddUint64", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			AddUint64(v)
+		}
+	})
+
+	b.Run("AddRawUint64", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			AddRawUint64(v)
+		}
+	})
+
+	b.Run("PutUint64", func(b *testing.B) {
+		bbw := newBytesWriter(make([]byte, 1<<4))
+		for i := 0; i < b.N; i++ {
+			bs := make([]byte, 8)
+			PutUint64(bs, v)
+			bbw.write(bs)
+		}
+	})
+
+	b.Run("AddUint64", func(b *testing.B) {
+		bbw := newBytesWriter(make([]byte, 1<<4))
+		for i := 0; i < b.N; i++ {
+			bbw.write(AddUint64(v))
+		}
+	})
+
+	b.Run("AddUint64 variation", func(b *testing.B) {
+		bbw := newBytesWriter(make([]byte, 1<<4))
+		for i := 0; i < b.N; i++ {
+			bs := AddUint64(v)
+			bbw.write(bs)
+		}
+	})
+
+	b.Run("AddRawUint64", func(b *testing.B) {
+		bbw := newBytesWriter(make([]byte, 1<<4))
+		for i := 0; i < b.N; i++ {
+			bbw.write64(AddRawUint64(v))
+		}
+	})
+
+	b.Run("AddRawUint64 variation", func(b *testing.B) {
+		bbw := newBytesWriter(make([]byte, 1<<4))
+		for i := 0; i < b.N; i++ {
+			bs := AddRawUint64(v)
+			bbw.write64(bs)
+		}
+	})
+}
+
+func (bbw *bytesWriter) write16(bs [2]byte) {
+	dataLimit := len(bbw.data)
+	dataCap := cap(bbw.data)
+
+	if 2 > bbw.freeCap {
+		newDataCap := dataCap << 1
+		for dataLimit+2-bbw.freeCap > newDataCap {
+			newDataCap <<= 1
+		}
+
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs[:])
+	bbw.cursor += 2
+	bbw.freeCap -= 2
+}
+
+func (bbw *bytesWriter) write32(bs [4]byte) {
+	dataLimit := len(bbw.data)
+	dataCap := cap(bbw.data)
+
+	if 4 > bbw.freeCap {
+		newDataCap := dataCap << 1
+		for dataLimit+4-bbw.freeCap > newDataCap {
+			newDataCap <<= 1
+		}
+
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs[:])
+	bbw.cursor += 4
+	bbw.freeCap -= 4
+}
+
+func (bbw *bytesWriter) write64(bs [8]byte) {
+	dataLimit := len(bbw.data)
+	dataCap := cap(bbw.data)
+
+	if 8 > bbw.freeCap {
+		newDataCap := dataCap << 1
+		for dataLimit+8-bbw.freeCap > newDataCap {
+			newDataCap <<= 1
+		}
+
+		nbs := make([]byte, newDataCap)
+		copy(nbs, bbw.data)
+		bbw.data = nbs
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs[:])
+	bbw.cursor += 8
+	bbw.freeCap -= 8
+}
+
+func AddRawUint16(v uint16) [2]byte {
+	b := [2]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	return b
+}
+
+func AddRawUint32(v uint32) [4]byte {
+	b := [4]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	return b
+}
+
+func AddRawUint64(v uint64) [8]byte {
+	b := [8]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	b[4] = byte(v >> 32)
+	b[5] = byte(v >> 40)
+	b[6] = byte(v >> 48)
+	b[7] = byte(v >> 56)
+	return b
+}

@@ -4,8 +4,6 @@ import (
 	"math"
 	"reflect"
 	"unsafe"
-
-	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type RawBinarySerializer struct{}
@@ -28,15 +26,7 @@ func (s *RawBinarySerializer) Deserialize(data []byte, target interface{}) error
 }
 
 func (s *RawBinarySerializer) DataRebind(payload interface{}, target interface{}) error {
-	bs, err := s.Serialize(payload)
-	if err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
-	}
-
-	if err = s.Deserialize(bs, target); err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
-	}
-
+	s.decode(s.encode(payload), target)
 	return nil
 }
 
@@ -57,7 +47,7 @@ func (s *RawBinarySerializer) Unmarshal(data []byte, target interface{}) error {
 // ################################################################################################################## \\
 
 func (s *RawBinarySerializer) encode(data interface{}) []byte {
-	bbw := newBytesWriter(make([]byte, 1<<5))
+	bbw := newBytesWriter(make([]byte, 1<<6))
 
 	if isPrimitive(data) {
 		s.serializePrimitive(bbw, data)
@@ -139,69 +129,37 @@ func (s *RawBinarySerializer) serializePrimitive(bbw *bytesWriter, data interfac
 	case string:
 		s.encodeUnsafeString(bbw, v)
 	case int:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v)))
 	case int8:
 		bbw.put(byte(v))
 	case int16:
-		bs := make([]byte, 2)
-		PutUint16(bs, uint16(v))
-		bbw.write(bs)
+		bbw.write(AddUint16(uint16(v)))
 	case int32:
-		bs := make([]byte, 4)
-		PutUint32(bs, uint32(v))
-		bbw.write(bs)
+		bbw.write(AddUint32(uint32(v)))
 	case int64:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v)))
 	case uint:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v)))
 	case uint8:
 		bbw.put(v)
 	case uint16:
-		bs := make([]byte, 2)
-		PutUint16(bs, v)
-		bbw.write(bs)
+		bbw.write(AddUint16(v))
 	case uint32:
-		bs := make([]byte, 4)
-		PutUint32(bs, v)
-		bbw.write(bs)
+		bbw.write(AddUint32(v))
 	case uint64:
-		bs := make([]byte, 8)
-		PutUint64(bs, v)
-		bbw.write(bs)
+		bbw.write(AddUint64(v))
 	case float32:
-		bs := make([]byte, 4)
-		PutUint32(bs, math.Float32bits(v))
-		bbw.write(bs)
+		bbw.write(AddUint32(math.Float32bits(v)))
 	case float64:
-		bs := make([]byte, 8)
-		PutUint64(bs, math.Float64bits(v))
-		bbw.write(bs)
+		bbw.write(AddUint64(math.Float64bits(v)))
 	case complex64:
-		bs := make([]byte, 4)
-		PutUint32(bs, math.Float32bits(real(v)))
-		bbw.write(bs)
-
-		bs = make([]byte, 4)
-		PutUint32(bs, math.Float32bits(imag(v)))
-		bbw.write(bs)
+		bbw.write(AddUint32(math.Float32bits(real(v))))
+		bbw.write(AddUint32(math.Float32bits(imag(v))))
 	case complex128:
-		bs := make([]byte, 8)
-		PutUint64(bs, math.Float64bits(real(v)))
-		bbw.write(bs)
-
-		bs = make([]byte, 8)
-		PutUint64(bs, math.Float64bits(imag(v)))
-		bbw.write(bs)
+		bbw.write(AddUint64(math.Float64bits(real(v))))
+		bbw.write(AddUint64(math.Float64bits(imag(v))))
 	case uintptr:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v)))
 	}
 }
 
@@ -216,69 +174,37 @@ func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *ref
 	case reflect.String:
 		s.encodeUnsafeString(bbw, v.String())
 	case reflect.Int:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v.Int()))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v.Int())))
 	case reflect.Int8:
 		bbw.put(byte(v.Int()))
 	case reflect.Int16:
-		bs := make([]byte, 2)
-		PutUint16(bs, uint16(v.Int()))
-		bbw.write(bs)
+		bbw.write(AddUint16(uint16(v.Int())))
 	case reflect.Int32:
-		bs := make([]byte, 4)
-		PutUint32(bs, uint32(v.Int()))
-		bbw.write(bs)
+		bbw.write(AddUint32(uint32(v.Int())))
 	case reflect.Int64:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v.Int()))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v.Int())))
 	case reflect.Uint:
-		bs := make([]byte, 8)
-		PutUint64(bs, v.Uint())
-		bbw.write(bs)
+		bbw.write(AddUint64(v.Uint()))
 	case reflect.Uint8:
 		bbw.put(byte(v.Uint()))
 	case reflect.Uint16:
-		bs := make([]byte, 2)
-		PutUint16(bs, uint16(v.Uint()))
-		bbw.write(bs)
+		bbw.write(AddUint16(uint16(v.Uint())))
 	case reflect.Uint32:
-		bs := make([]byte, 4)
-		PutUint32(bs, uint32(v.Uint()))
-		bbw.write(bs)
+		bbw.write(AddUint32(uint32(v.Uint())))
 	case reflect.Uint64:
-		bs := make([]byte, 8)
-		PutUint64(bs, v.Uint())
-		bbw.write(bs)
+		bbw.write(AddUint64(v.Uint()))
 	case reflect.Float32:
-		bs := make([]byte, 4)
-		PutUint32(bs, math.Float32bits(float32(v.Float())))
-		bbw.write(bs)
+		bbw.write(AddUint32(math.Float32bits(float32(v.Float()))))
 	case reflect.Float64:
-		bs := make([]byte, 8)
-		PutUint64(bs, math.Float64bits(v.Float()))
-		bbw.write(bs)
+		bbw.write(AddUint64(math.Float64bits(v.Float())))
 	case reflect.Complex64:
-		bs := make([]byte, 4)
-		PutUint32(bs, math.Float32bits(real(complex64(v.Complex()))))
-		bbw.write(bs)
-
-		bs = make([]byte, 4)
-		PutUint32(bs, math.Float32bits(imag(complex64(v.Complex()))))
-		bbw.write(bs)
+		bbw.write(AddUint32(math.Float32bits(real(complex64(v.Complex())))))
+		bbw.write(AddUint32(math.Float32bits(imag(complex64(v.Complex())))))
 	case reflect.Complex128:
-		bs := make([]byte, 8)
-		PutUint64(bs, math.Float64bits(real(v.Complex())))
-		bbw.write(bs)
-
-		bs = make([]byte, 8)
-		PutUint64(bs, math.Float64bits(imag(v.Complex())))
-		bbw.write(bs)
+		bbw.write(AddUint64(math.Float64bits(real(v.Complex()))))
+		bbw.write(AddUint64(math.Float64bits(imag(v.Complex()))))
 	case reflect.Uintptr:
-		bs := make([]byte, 8)
-		PutUint64(bs, uint64(v.Int()))
-		bbw.write(bs)
+		bbw.write(AddUint64(uint64(v.Int())))
 	default:
 	}
 }
@@ -408,9 +334,7 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 
 func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
-	bs := make([]byte, 4)
-	PutUint32(bs, uint32(fLen))
-	bbw.write(bs)
+	bbw.write(AddUint32(uint32(fLen)))
 
 	if fLen == 0 {
 		return
@@ -499,9 +423,7 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.
 
 func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
-	bs := make([]byte, 4)
-	PutUint32(bs, uint32(fLen))
-	bbw.write(bs)
+	bbw.write(AddUint32(uint32(fLen)))
 
 	if fLen == 0 {
 		return
@@ -510,45 +432,29 @@ func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) 
 	switch rawFieldValue := field.Interface().(type) {
 	case map[int]int:
 		for k, v := range rawFieldValue {
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(k))
-			bbw.write(bs)
-
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(v))
-			bbw.write(bs)
+			bbw.write(AddUint64(uint64(k)))
+			bbw.write(AddUint64(uint64(v)))
 		}
 
 		return
 	case map[int]interface{}:
 		for k, v := range rawFieldValue {
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(k))
-			bbw.write(bs)
-
-			s.serializePrimitive(bbw, &v)
+			bbw.write(AddUint64(uint64(k)))
+			bbw.write(s.encode(v))
 		}
 
 		return
 	case map[int64]int64:
 		for k, v := range rawFieldValue {
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(k))
-			bbw.write(bs)
-
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(v))
-			bbw.write(bs)
+			bbw.write(AddUint64(uint64(k)))
+			bbw.write(AddUint64(uint64(v)))
 		}
 
 		return
 	case map[int64]interface{}:
 		for k, v := range rawFieldValue {
-			bs = make([]byte, 8)
-			PutUint64(bs, uint64(k))
-			bbw.write(bs)
-
-			s.serializePrimitive(bbw, &v)
+			bbw.write(AddUint64(uint64(k)))
+			bbw.write(s.encode(v))
 		}
 
 		return
@@ -567,14 +473,9 @@ func (s *RawBinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) 
 
 		return
 	case map[interface{}]interface{}:
-		for _, key := range field.MapKeys() {
-			// key
-			bbw.write(s.encode(key.Interface()))
-
-			// value type
-			value := field.MapIndex(key)
-			// value
-			bbw.write(s.encode(value.Interface()))
+		for k, v := range rawFieldValue {
+			bbw.write(s.encode(k))
+			bbw.write(s.encode(v))
 		}
 	default:
 		for _, key := range field.MapKeys() {
@@ -675,9 +576,7 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) 
 
 func (s *RawBinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string) {
 	strLen := len(str)
-	bs := make([]byte, 4)
-	PutUint32(bs, uint32(strLen))
-	bbw.write(bs)
+	bbw.write(AddUint32(uint32(strLen)))
 	bbw.write(unsafe.Slice(unsafe.StringData(str), strLen))
 }
 
@@ -743,15 +642,17 @@ type bytesWriter struct {
 }
 
 func newBytesWriter(data []byte) *bytesWriter {
+	capacity := cap(data)
+	length := len(data)
 	bbw := &bytesWriter{
 		data:    data,
-		freeCap: cap(data) - len(data),
+		freeCap: capacity - length,
 	}
 	if bbw.freeCap == 0 {
-		bbw.freeCap = cap(data)
+		bbw.freeCap = capacity
 	}
-	if len(data) == 0 {
-		bbw.data = bbw.data[:cap(data)]
+	if length == 0 {
+		bbw.data = bbw.data[:capacity]
 	}
 
 	return bbw
@@ -774,11 +675,11 @@ func (bbw *bytesWriter) put(b byte) {
 func (bbw *bytesWriter) write(bs []byte) {
 	bsLen := len(bs)
 	dataLimit := len(bbw.data)
-	dataCap := cap(bbw.data)
 
 	if bsLen > bbw.freeCap {
-		newDataCap := dataCap << 1
-		for dataLimit+bsLen-bbw.freeCap > newDataCap {
+		newDataCap := cap(bbw.data) << 1
+		currentMaxSize := dataLimit + bsLen - bbw.freeCap
+		for currentMaxSize > newDataCap {
 			newDataCap <<= 1
 		}
 
@@ -841,4 +742,40 @@ func PutUint64(b []byte, v uint64) {
 	b[5] = byte(v >> 40)
 	b[6] = byte(v >> 48)
 	b[7] = byte(v >> 56)
+}
+
+// ################################################################################################################## \\
+// addon to binary little endian functions
+// ################################################################################################################## \\
+
+func AddUint16(v uint16) []byte {
+	b := [2]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	bs := b[:]
+	return bs
+}
+
+func AddUint32(v uint32) []byte {
+	b := [4]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	bs := b[:]
+	return bs
+}
+
+func AddUint64(v uint64) []byte {
+	b := [8]byte{}
+	b[0] = byte(v)
+	b[1] = byte(v >> 8)
+	b[2] = byte(v >> 16)
+	b[3] = byte(v >> 24)
+	b[4] = byte(v >> 32)
+	b[5] = byte(v >> 40)
+	b[6] = byte(v >> 48)
+	b[7] = byte(v >> 56)
+	bs := b[:]
+	return bs
 }
