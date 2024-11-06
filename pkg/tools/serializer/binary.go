@@ -671,3 +671,42 @@ func (s *BinarySerializer) encodeRune(bbw *bytesWriter, str string) {
 func (s *BinarySerializer) decodeRune(bbr *bytesReader) string {
 	return string(bbr.read(int(Uint32(bbr.read(4)))))
 }
+
+// ################################################################################################################## \\
+// primitive & reflect primitive checks -- string included
+// ################################################################################################################## \\
+
+func isPrimitive(target interface{}) bool {
+	switch target.(type) {
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64,
+		complex64, complex128,
+		uintptr,
+		*int, *int8, *int16, *int32, *int64,
+		*uint, *uint8, *uint16, *uint32, *uint64,
+		*float32, *float64,
+		*complex64, *complex128,
+		*uintptr,
+		string, *string,
+		bool, *bool:
+		return true
+	//case nil:
+	//	return true
+	default:
+		return false
+	}
+}
+
+func isReflectPrimitive(target reflect.Kind) bool {
+	switch target {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Complex64, reflect.Complex128,
+		reflect.String, reflect.Bool:
+		return true
+	default:
+		return false
+	}
+}
