@@ -304,6 +304,10 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 			t.Logf("%v: %v\n", key, value)
 		}
 	})
+
+	t.Run("Test Benchmark Data", func(t *testing.T) {
+		Test_UnsafeBinary_Benchmark_Data(t)
+	})
 }
 
 func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {

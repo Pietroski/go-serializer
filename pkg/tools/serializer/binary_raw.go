@@ -370,8 +370,8 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data interface{}) bool {
 	switch v := data.(type) {
 	case []bool:
-		for _, n := range v {
-			if n {
+		for _, b := range v {
+			if b {
 				bbw.put(1)
 			} else {
 				bbw.put(0)
@@ -484,20 +484,20 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 ) bool {
 	switch field.Type().String() {
 	case "[]string":
-		ii := make([]string, length)
-		for i := range ii {
-			ii[i] = s.decodeUnsafeString(bbr)
+		ss := make([]string, length)
+		for i := range ss {
+			ss[i] = s.decodeUnsafeString(bbr)
 		}
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(ss))
 		return true
 	case "[]bool":
-		ii := make([]bool, length)
-		for i := range ii {
-			ii[i] = bbr.next() == 1
+		bb := make([]bool, length)
+		for i := range bb {
+			bb[i] = bbr.next() == 1
 		}
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(bb))
 		return true
 	case "[]int":
 		ii := make([]int, length)
