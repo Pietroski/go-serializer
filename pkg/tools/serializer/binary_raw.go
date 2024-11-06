@@ -615,7 +615,6 @@ func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.
 		}
 
 		if f.Kind() == reflect.Slice || f.Kind() == reflect.Array {
-			// if it is an slice or array
 			bbw.write(s.encode(f.Interface()))
 			continue
 		}
@@ -919,9 +918,9 @@ func newBytesWriter(data []byte) *bytesWriter {
 func (bbw *bytesWriter) put(b byte) {
 	if 1 >= bbw.freeCap {
 		newDataCap := cap(bbw.data) << 1
-		nbs := make([]byte, newDataCap)
-		copy(nbs, bbw.data)
-		bbw.data = nbs
+		newData := make([]byte, newDataCap)
+		copy(newData, bbw.data)
+		bbw.data = newData
 		bbw.freeCap = newDataCap - bbw.cursor
 	}
 
@@ -941,9 +940,9 @@ func (bbw *bytesWriter) write(bs []byte) {
 			newDataCap <<= 1
 		}
 
-		nbs := make([]byte, newDataCap)
-		copy(nbs, bbw.data)
-		bbw.data = nbs
+		newData := make([]byte, newDataCap)
+		copy(newData, bbw.data)
+		bbw.data = newData
 		bbw.freeCap = newDataCap - bbw.cursor
 	}
 
