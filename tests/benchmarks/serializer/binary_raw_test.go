@@ -158,7 +158,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 
 	b.Run("slice serialization", func(b *testing.B) {
 		b.Run("slice of int", func(b *testing.B) {
-			msg := ProtoTypeSliceTestData{
+			msg := &ProtoTypeSliceTestData{
 				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			}
 			serializer := go_serializer.NewRawBinarySerializer()
@@ -169,7 +169,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target SliceTestData
+				var target ProtoTypeSliceTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -177,7 +177,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target SliceTestData
+				var target ProtoTypeSliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -185,7 +185,7 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
-				var target SliceTestData
+				var target ProtoTypeSliceTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)

@@ -333,8 +333,9 @@ func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
 
 	t.Run("slice serialization", func(t *testing.T) {
 		t.Run("slice of int", func(t *testing.T) {
-			msg := ProtoTypeSliceTestData{
+			msg := &ProtoTypeSliceTestData{
 				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+				StrList: []string{"first-item", "second-item", "third-item", "fourth-item"},
 			}
 			serializer := NewRawBinarySerializer()
 

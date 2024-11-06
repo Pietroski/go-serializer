@@ -1,6 +1,7 @@
 package go_serializer
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"unsafe"
@@ -332,11 +333,52 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 // slice & array encoder
 // ################################################################################################################## \\
 
+func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data interface{}) {
+	switch v := data.(type) {
+	case []int64:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+	}
+}
+
+func (s *RawBinarySerializer) deserializePrimitiveSliceArray(bbr *bytesReader, target interface{}) {
+	switch v := target.(type) {
+	case []int64:
+		for i := range v {
+			v[i] = int64(Uint64(bbr.read(8)))
+		}
+	}
+}
+
+func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
+	bbr *bytesReader, field *reflect.Value, length uint32,
+) bool {
+	switch field.Type().String() {
+	case "[]int64":
+		ii := make([]int64, length)
+		for i := range ii {
+			ii[i] = int64(Uint64(bbr.read(8)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	}
+
+	return false
+}
+
 func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
 	bbw.write(AddUint32(uint32(fLen)))
 
 	if fLen == 0 {
+		return
+	}
+
+	fieldInterface := field.Interface()
+	if isSlicePrimitive(fieldInterface) {
+		s.serializePrimitiveSliceArray(bbw, fieldInterface)
 		return
 	}
 
@@ -381,7 +423,19 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.
 		return
 	}
 
+	if s.deserializeReflectPrimitiveSliceArray(bbr, field, length) {
+		return
+	}
+
 	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
+
+	fmt.Println(field.Type().String())
+
+	fieldInterface := field.Interface()
+	if isSlicePrimitive(fieldInterface) {
+		s.deserializePrimitiveSliceArray(bbr, fieldInterface)
+		return
+	}
 
 	for i := uint32(0); i < length; i++ {
 		f := field.Index(int(i))
@@ -567,6 +621,65 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) 
 			tmtd[itrfcKey] = itrfcType
 		}
 		field.Set(reflect.ValueOf(tmtd))
+	}
+}
+
+// ################################################################################################################## \\
+// primitive & reflect primitive checks -- string included
+// ################################################################################################################## \\
+
+func isPrimitive(target interface{}) bool {
+	switch target.(type) {
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64,
+		complex64, complex128,
+		uintptr,
+		*int, *int8, *int16, *int32, *int64,
+		*uint, *uint8, *uint16, *uint32, *uint64,
+		*float32, *float64,
+		*complex64, *complex128,
+		*uintptr,
+		string, *string,
+		bool, *bool:
+		return true
+	//case nil:
+	//	return true
+	default:
+		return false
+	}
+}
+
+func isReflectPrimitive(target reflect.Kind) bool {
+	switch target {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Complex64, reflect.Complex128,
+		reflect.String, reflect.Bool:
+		return true
+	default:
+		return false
+	}
+}
+
+func isSlicePrimitive(target interface{}) bool {
+	switch target.(type) {
+	case []int, []int8, []int16, []int32, []int64,
+		[]uint, []uint8, []uint16, []uint32, []uint64,
+		[]float32, []float64,
+		[]complex64, []complex128,
+		[]uintptr,
+		//*int, *int8, *int16, *int32, *int64,
+		//*uint, *uint8, *uint16, *uint32, *uint64,
+		//*float32, *float64,
+		//*complex64, *complex128,
+		//*uintptr,
+		//*string, *bool,
+		[]string, []bool:
+		return true
+	default:
+		return false
 	}
 }
 
