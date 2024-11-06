@@ -288,6 +288,46 @@ func BenchmarkType_UnsafeBinarySerializer(b *testing.B) {
 				}
 			})
 		})
+
+		b.Run("slice of string", func(b *testing.B) {
+			msg := &ProtoTypeSliceTestData{
+				StrList: []string{"first-item", "second-item", "third-item", "fourth-item"},
+			}
+			serializer := go_serializer.NewRawBinarySerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target ProtoTypeSliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target ProtoTypeSliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target ProtoTypeSliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
 	})
 
 	b.Run("map serialization", func(b *testing.B) {

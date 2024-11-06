@@ -210,6 +210,46 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 				}
 			})
 		})
+
+		b.Run("slice of string", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				StrList: []string{"first-item", "second-item", "third-item", "fourth-item"},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
 	})
 
 	b.Run("map serialization", func(b *testing.B) {

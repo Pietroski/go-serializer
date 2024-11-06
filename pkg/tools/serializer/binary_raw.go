@@ -369,15 +369,108 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 
 func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data interface{}) bool {
 	switch v := data.(type) {
-	case []int64:
+	case []bool:
 		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
+			if n {
+				bbw.put(1)
+			} else {
+				bbw.put(0)
+			}
 		}
 
 		return true
 	case []string:
 		for _, str := range v {
 			s.encodeUnsafeString(bbw, str)
+		}
+
+		return true
+	case []int:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case []int8:
+		for _, n := range v {
+			bbw.put(byte(n))
+		}
+
+		return true
+	case []int16:
+		for _, n := range v {
+			bbw.write(AddUint16(uint16(n)))
+		}
+
+		return true
+	case []int32:
+		for _, n := range v {
+			bbw.write(AddUint32(uint32(n)))
+		}
+
+		return true
+	case []int64:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case []uint:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case []uint8:
+		bbw.write(v)
+		return true
+	case []uint16:
+		for _, n := range v {
+			bbw.write(AddUint16(n))
+		}
+
+		return true
+	case []uint32:
+		for _, n := range v {
+			bbw.write(AddUint32(n))
+		}
+
+		return true
+	case []uint64:
+		for _, n := range v {
+			bbw.write(AddUint64(n))
+		}
+
+		return true
+	case []float32:
+		for _, n := range v {
+			bbw.write(AddUint32(math.Float32bits(n)))
+		}
+
+		return true
+	case []float64:
+		for _, n := range v {
+			bbw.write(AddUint64(math.Float64bits(n)))
+		}
+
+		return true
+	case []complex64:
+		for _, n := range v {
+			bbw.write(AddUint32(math.Float32bits(real(n))))
+			bbw.write(AddUint32(math.Float32bits(imag(n))))
+		}
+
+		return true
+	case []complex128:
+		for _, n := range v {
+			bbw.write(AddUint64(math.Float64bits(real(n))))
+			bbw.write(AddUint64(math.Float64bits(imag(n))))
+		}
+
+		return true
+	case []uintptr:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
 		}
 
 		return true
@@ -390,6 +483,54 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 	bbr *bytesReader, field *reflect.Value, length uint32,
 ) bool {
 	switch field.Type().String() {
+	case "[]string":
+		ii := make([]string, length)
+		for i := range ii {
+			ii[i] = s.decodeUnsafeString(bbr)
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]bool":
+		ii := make([]bool, length)
+		for i := range ii {
+			ii[i] = bbr.next() == 1
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int":
+		ii := make([]int, length)
+		for i := range ii {
+			ii[i] = int(Uint64(bbr.read(8)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int8":
+		ii := make([]int8, length)
+		for i := range ii {
+			ii[i] = int8(bbr.next())
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int16":
+		ii := make([]int16, length)
+		for i := range ii {
+			ii[i] = int16(Uint64(bbr.read(2)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int32":
+		ii := make([]int32, length)
+		for i := range ii {
+			ii[i] = int32(Uint64(bbr.read(4)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
 	case "[]int64":
 		ii := make([]int64, length)
 		for i := range ii {
@@ -398,10 +539,42 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 
 		field.Set(reflect.ValueOf(ii))
 		return true
-	case "[]string":
-		ii := make([]string, length)
+	case "[]uint":
+		ii := make([]uint, length)
 		for i := range ii {
-			ii[i] = s.decodeUnsafeString(bbr)
+			ii[i] = uint(Uint64(bbr.read(8)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint8":
+		ii := make([]uint8, length)
+		for i := range ii {
+			ii[i] = bbr.next()
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint16":
+		ii := make([]uint16, length)
+		for i := range ii {
+			ii[i] = uint16(Uint64(bbr.read(2)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint32":
+		ii := make([]uint32, length)
+		for i := range ii {
+			ii[i] = uint32(Uint64(bbr.read(4)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint64":
+		ii := make([]uint64, length)
+		for i := range ii {
+			ii[i] = Uint64(bbr.read(8))
 		}
 
 		field.Set(reflect.ValueOf(ii))
@@ -787,20 +960,10 @@ func (bbw *bytesWriter) bytes() []byte {
 // binary little endian functions
 // ################################################################################################################## \\
 
-func Uint16(b []byte) uint16 {
-	_ = b[1] // bounds check hint to compiler; see golang.org/issue/14808
-	return uint16(b[0]) | uint16(b[1])<<8
-}
-
 func PutUint16(b []byte, v uint16) {
 	_ = b[1] // early bounds check to guarantee safety of writes below
 	b[0] = byte(v)
 	b[1] = byte(v >> 8)
-}
-
-func Uint32(b []byte) uint32 {
-	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808
-	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
 }
 
 func PutUint32(b []byte, v uint32) {
@@ -809,12 +972,6 @@ func PutUint32(b []byte, v uint32) {
 	b[1] = byte(v >> 8)
 	b[2] = byte(v >> 16)
 	b[3] = byte(v >> 24)
-}
-
-func Uint64(b []byte) uint64 {
-	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
-	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
-		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
 
 func PutUint64(b []byte, v uint64) {
@@ -827,6 +984,22 @@ func PutUint64(b []byte, v uint64) {
 	b[5] = byte(v >> 40)
 	b[6] = byte(v >> 48)
 	b[7] = byte(v >> 56)
+}
+
+func Uint16(b []byte) uint16 {
+	_ = b[1] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint16(b[0]) | uint16(b[1])<<8
+}
+
+func Uint32(b []byte) uint32 {
+	_ = b[3] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
+}
+
+func Uint64(b []byte) uint64 {
+	_ = b[7] // bounds check hint to compiler; see golang.org/issue/14808
+	return uint64(b[0]) | uint64(b[1])<<8 | uint64(b[2])<<16 | uint64(b[3])<<24 |
+		uint64(b[4])<<32 | uint64(b[5])<<40 | uint64(b[6])<<48 | uint64(b[7])<<56
 }
 
 // ################################################################################################################## \\
