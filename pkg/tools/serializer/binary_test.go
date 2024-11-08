@@ -10,10 +10,12 @@ import (
 type (
 	ProtoTypeSliceTestData struct {
 		IntList        []int64      `json:"int_list,omitempty"`
+		UintList       []uint64     `json:"uint_list,omitempty"`
 		StrList        []string     `json:"str_list,omitempty"`
 		StructList     []SliceItem  `json:"struct_list,omitempty"`
 		PtrStructList  []*SliceItem `json:"ptr_struct_list,omitempty"`
 		BytesBytesList [][]byte     `json:"bytes_bytes_list,omitempty"`
+		BytesList      []byte       `json:"bytes_list,omitempty"`
 	}
 
 	TestData struct {
@@ -484,6 +486,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 //	}
 func Test_BSReader(t *testing.T) {
 	t.Log(1 << 4)
+	t.Log(1 << 8)
 	bbr := newBytesWriter(make([]byte, 1<<4))
 	t.Log(len(bbr.bytes()), cap(bbr.bytes()))
 	bs := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}

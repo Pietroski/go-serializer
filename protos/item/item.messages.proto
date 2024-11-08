@@ -29,12 +29,18 @@ message AnotherItem {
   AnotherSubItem subItem = 6;
 }
 
+message IntSliceTestData {
+  repeated int64 int_list = 1;
+}
+
 message SliceTestData {
   repeated int64 int_list = 1;
-  repeated string str_list = 2;
-  repeated SliceItem struct_list = 3;
-  repeated SliceItem struct_nil_list = 4;
-  repeated bytes bytes_bytes_list = 5;
+  repeated uint64 uint_list = 2;
+  repeated string str_list = 3;
+  repeated SliceItem struct_list = 4;
+  repeated SliceItem struct_nil_list = 5;
+  repeated bytes bytes_bytes_list = 6;
+  bytes bytes_list = 7;
 }
 
 message SliceItem {

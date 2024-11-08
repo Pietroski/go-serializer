@@ -290,6 +290,383 @@ func (s *RawBinarySerializer) deserializePrimitive(bbr *bytesReader, field *refl
 	return false
 }
 
+func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data interface{}) bool {
+	switch v := data.(type) {
+	case []bool:
+		for _, b := range v {
+			if b {
+				bbw.put(1)
+			} else {
+				bbw.put(0)
+			}
+		}
+
+		return true
+	case []string:
+		for _, str := range v {
+			s.encodeUnsafeString(bbw, str)
+		}
+
+		return true
+	case []int:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case []int8:
+		for _, n := range v {
+			bbw.put(byte(n))
+		}
+
+		return true
+	case []int16:
+		for _, n := range v {
+			bbw.write(AddUint16(uint16(n)))
+		}
+
+		return true
+	case []int32:
+		for _, n := range v {
+			bbw.write(AddUint32(uint32(n)))
+		}
+
+		return true
+	case []int64:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		//bbw.write(unsafe.Slice((*byte)(unsafe.Pointer(&v[0])), len(v)*8))
+
+		return true
+	case []uint:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case []uint8:
+		bbw.write(v)
+		return true
+	case []uint16:
+		for _, n := range v {
+			bbw.write(AddUint16(n))
+		}
+
+		return true
+	case []uint32:
+		for _, n := range v {
+			bbw.write(AddUint32(n))
+		}
+
+		return true
+	case []uint64:
+		for _, n := range v {
+			bbw.write(AddUint64(n))
+		}
+
+		return true
+	case []float32:
+		for _, n := range v {
+			bbw.write(AddUint32(math.Float32bits(n)))
+		}
+
+		return true
+	case []float64:
+		for _, n := range v {
+			bbw.write(AddUint64(math.Float64bits(n)))
+		}
+
+		return true
+	case []complex64:
+		for _, n := range v {
+			bbw.write(AddUint32(math.Float32bits(real(n))))
+			bbw.write(AddUint32(math.Float32bits(imag(n))))
+		}
+
+		return true
+	case []complex128:
+		for _, n := range v {
+			bbw.write(AddUint64(math.Float64bits(real(n))))
+			bbw.write(AddUint64(math.Float64bits(imag(n))))
+		}
+
+		return true
+	case []uintptr:
+		for _, n := range v {
+			bbw.write(AddUint64(uint64(n)))
+		}
+
+		return true
+	case [][]byte:
+		for _, bs := range v {
+			size := len(bs)
+			bbw.write(AddUint32(uint32(size)))
+			if size == 0 {
+				continue
+			}
+
+			bbw.write(bs)
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
+	bbw *bytesWriter, field *reflect.Value, length int,
+) bool {
+	switch field.Type().String() {
+	case "[]bool":
+		for i := 0; i < length; i++ {
+			if field.Index(i).Bool() {
+				bbw.put(1)
+			} else {
+				bbw.put(0)
+			}
+		}
+
+		return true
+	case "[]string":
+		for i := 0; i < length; i++ {
+			s.encodeUnsafeString(bbw, field.Index(i).String())
+		}
+
+		return true
+	case "[]int":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(uint64(field.Index(i).Int())))
+		}
+
+		return true
+	case "[]int8":
+		for i := 0; i < length; i++ {
+			bbw.put(byte(field.Index(i).Int()))
+		}
+
+		return true
+	case "[]int16":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint16(uint16(field.Index(i).Int())))
+		}
+
+		return true
+	case "[]int32":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint32(uint32(field.Index(i).Int())))
+		}
+
+		return true
+	case "[]int64":
+		//for i := 0; i < length; i++ {
+		//	bbw.write(AddUint64(uint64(field.Index(i).Int())))
+		//}
+
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*8))
+
+		return true
+	case "[]uint":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(field.Index(i).Uint()))
+		}
+
+		return true
+	case "[]uint8":
+		bbw.write(field.Bytes())
+		//bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()))
+		return true
+	case "[]uint16":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint16(uint16(field.Index(i).Uint())))
+		}
+
+		return true
+	case "[]uint32":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint32(uint32(field.Index(i).Uint())))
+		}
+
+		return true
+	case "[]uint64":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(field.Index(i).Uint()))
+		}
+
+		return true
+	case "[]float32":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint32(math.Float32bits(float32(field.Index(i).Float()))))
+		}
+
+		return true
+	case "[]float64":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(math.Float64bits(field.Index(i).Float())))
+		}
+
+		return true
+	case "[]complex64":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint32(math.Float32bits(real(complex64(field.Index(i).Complex())))))
+			bbw.write(AddUint32(math.Float32bits(imag(complex64(field.Index(i).Complex())))))
+		}
+
+		return true
+	case "[]complex128":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(math.Float64bits(real(field.Index(i).Complex()))))
+			bbw.write(AddUint64(math.Float64bits(imag(field.Index(i).Complex()))))
+		}
+
+		return true
+	case "[]uintptr":
+		for i := 0; i < length; i++ {
+			bbw.write(AddUint64(uint64(field.Index(i).Int())))
+		}
+
+		return true
+	case "[][]uint8":
+		for i := 0; i < length; i++ {
+			f := field.Index(i)
+			size := f.Len()
+			bbw.write(AddUint32(uint32(size)))
+			if size == 0 {
+				continue
+			}
+
+			bbw.write(f.Bytes())
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
+	bbr *bytesReader, field *reflect.Value, length int,
+) bool {
+	switch field.Type().String() {
+	case "[]string":
+		ss := make([]string, length)
+		for i := range ss {
+			ss[i] = s.decodeUnsafeString(bbr)
+		}
+
+		field.Set(reflect.ValueOf(ss))
+		return true
+	case "[]bool":
+		bb := make([]bool, length)
+		for i := range bb {
+			bb[i] = bbr.next() == 1
+		}
+
+		field.Set(reflect.ValueOf(bb))
+		return true
+	case "[]int":
+		ii := make([]int, length)
+		for i := range ii {
+			ii[i] = int(Uint64(bbr.read(8)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int8":
+		ii := make([]int8, length)
+		for i := range ii {
+			ii[i] = int8(bbr.next())
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int16":
+		ii := make([]int16, length)
+		for i := range ii {
+			ii[i] = int16(Uint16(bbr.read(2)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int32":
+		ii := make([]int32, length)
+		for i := range ii {
+			ii[i] = int32(Uint32(bbr.read(4)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]int64":
+		bsLen := 8 * int(length)
+		field.Set(reflect.ValueOf(unsafe.Slice((*int64)(unsafe.Pointer(&bbr.read(bsLen)[0])), bsLen/8)))
+
+		//ii := make([]int64, length)
+		//for i := range ii {
+		//	ii[i] = int64(Uint64(bbr.read(8)))
+		//}
+		//
+		// field.Set(reflect.ValueOf(ii))
+
+		return true
+	case "[]uint":
+		ii := make([]uint, length)
+		for i := range ii {
+			ii[i] = uint(Uint64(bbr.read(8)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint8":
+		//field.Set(reflect.ValueOf(bbr.read(length)))
+
+		field.SetBytes(bbr.read(length))
+
+		//field.Set(reflect.ValueOf(unsafe.Slice((*byte)(&bbr.read(length)[0]), length)))
+		return true
+	case "[]uint16":
+		ii := make([]uint16, length)
+		for i := range ii {
+			ii[i] = uint16(Uint64(bbr.read(2)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint32":
+		ii := make([]uint32, length)
+		for i := range ii {
+			ii[i] = uint32(Uint64(bbr.read(4)))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[]uint64":
+		ii := make([]uint64, length)
+		for i := range ii {
+			ii[i] = Uint64(bbr.read(8))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	case "[][]uint8":
+		ii := make([][]byte, length)
+		for i := range ii {
+			l := Uint32(bbr.read(4))
+			if l == 0 {
+				continue
+			}
+
+			ii[i] = bbr.read(int(l))
+		}
+
+		field.Set(reflect.ValueOf(ii))
+		return true
+	}
+
+	return false
+}
+
 // ################################################################################################################## \\
 // struct encoder
 // ################################################################################################################## \\
@@ -367,232 +744,17 @@ func (s *RawBinarySerializer) structDecode(bbr *bytesReader, field *reflect.Valu
 // slice & array encoder
 // ################################################################################################################## \\
 
-func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data interface{}) bool {
-	switch v := data.(type) {
-	case []bool:
-		for _, b := range v {
-			if b {
-				bbw.put(1)
-			} else {
-				bbw.put(0)
-			}
-		}
-
-		return true
-	case []string:
-		for _, str := range v {
-			s.encodeUnsafeString(bbw, str)
-		}
-
-		return true
-	case []int:
-		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
-		}
-
-		return true
-	case []int8:
-		for _, n := range v {
-			bbw.put(byte(n))
-		}
-
-		return true
-	case []int16:
-		for _, n := range v {
-			bbw.write(AddUint16(uint16(n)))
-		}
-
-		return true
-	case []int32:
-		for _, n := range v {
-			bbw.write(AddUint32(uint32(n)))
-		}
-
-		return true
-	case []int64:
-		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
-		}
-
-		return true
-	case []uint:
-		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
-		}
-
-		return true
-	case []uint8:
-		bbw.write(v)
-		return true
-	case []uint16:
-		for _, n := range v {
-			bbw.write(AddUint16(n))
-		}
-
-		return true
-	case []uint32:
-		for _, n := range v {
-			bbw.write(AddUint32(n))
-		}
-
-		return true
-	case []uint64:
-		for _, n := range v {
-			bbw.write(AddUint64(n))
-		}
-
-		return true
-	case []float32:
-		for _, n := range v {
-			bbw.write(AddUint32(math.Float32bits(n)))
-		}
-
-		return true
-	case []float64:
-		for _, n := range v {
-			bbw.write(AddUint64(math.Float64bits(n)))
-		}
-
-		return true
-	case []complex64:
-		for _, n := range v {
-			bbw.write(AddUint32(math.Float32bits(real(n))))
-			bbw.write(AddUint32(math.Float32bits(imag(n))))
-		}
-
-		return true
-	case []complex128:
-		for _, n := range v {
-			bbw.write(AddUint64(math.Float64bits(real(n))))
-			bbw.write(AddUint64(math.Float64bits(imag(n))))
-		}
-
-		return true
-	case []uintptr:
-		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
-		}
-
-		return true
-	}
-
-	return false
-}
-
-func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
-	bbr *bytesReader, field *reflect.Value, length uint32,
-) bool {
-	switch field.Type().String() {
-	case "[]string":
-		ss := make([]string, length)
-		for i := range ss {
-			ss[i] = s.decodeUnsafeString(bbr)
-		}
-
-		field.Set(reflect.ValueOf(ss))
-		return true
-	case "[]bool":
-		bb := make([]bool, length)
-		for i := range bb {
-			bb[i] = bbr.next() == 1
-		}
-
-		field.Set(reflect.ValueOf(bb))
-		return true
-	case "[]int":
-		ii := make([]int, length)
-		for i := range ii {
-			ii[i] = int(Uint64(bbr.read(8)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]int8":
-		ii := make([]int8, length)
-		for i := range ii {
-			ii[i] = int8(bbr.next())
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]int16":
-		ii := make([]int16, length)
-		for i := range ii {
-			ii[i] = int16(Uint64(bbr.read(2)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]int32":
-		ii := make([]int32, length)
-		for i := range ii {
-			ii[i] = int32(Uint64(bbr.read(4)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]int64":
-		ii := make([]int64, length)
-		for i := range ii {
-			ii[i] = int64(Uint64(bbr.read(8)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]uint":
-		ii := make([]uint, length)
-		for i := range ii {
-			ii[i] = uint(Uint64(bbr.read(8)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]uint8":
-		ii := make([]uint8, length)
-		for i := range ii {
-			ii[i] = bbr.next()
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]uint16":
-		ii := make([]uint16, length)
-		for i := range ii {
-			ii[i] = uint16(Uint64(bbr.read(2)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]uint32":
-		ii := make([]uint32, length)
-		for i := range ii {
-			ii[i] = uint32(Uint64(bbr.read(4)))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	case "[]uint64":
-		ii := make([]uint64, length)
-		for i := range ii {
-			ii[i] = Uint64(bbr.read(8))
-		}
-
-		field.Set(reflect.ValueOf(ii))
-		return true
-	}
-
-	return false
-}
-
 func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Value) {
 	fLen := field.Len()
 	bbw.write(AddUint32(uint32(fLen)))
-
 	if fLen == 0 {
 		return
 	}
 
-	if s.serializePrimitiveSliceArray(bbw, field.Interface()) {
+	//if s.serializePrimitiveSliceArray(bbw, field.Interface()) {
+	//	return
+	//}
+	if s.serializeReflectPrimitiveSliceArray(bbw, field, fLen) {
 		return
 	}
 
@@ -631,7 +793,7 @@ func (s *RawBinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.
 }
 
 func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
-	length := Uint32(bbr.read(4))
+	length := int(Uint32(bbr.read(4)))
 	if length == 0 {
 		return
 	}
@@ -640,9 +802,9 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.
 		return
 	}
 
-	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
-	for i := uint32(0); i < length; i++ {
-		f := field.Index(int(i))
+	field.Set(reflect.MakeSlice(field.Type(), length, length))
+	for i := 0; i < length; i++ {
+		f := field.Index(i)
 
 		if s.deserializePrimitive(bbr, &f) {
 			continue
@@ -863,10 +1025,8 @@ func (bbr *bytesReader) next() byte {
 }
 
 func (bbr *bytesReader) read(n int) []byte {
-	bs := bbr.data[bbr.cursor : bbr.cursor+n]
-
 	bbr.cursor += n
-	return bs
+	return bbr.data[bbr.cursor-n : bbr.cursor]
 }
 
 func (bbr *bytesReader) yield() int {
@@ -931,19 +1091,17 @@ func (bbw *bytesWriter) put(b byte) {
 
 func (bbw *bytesWriter) write(bs []byte) {
 	bsLen := len(bs)
-	dataLimit := len(bbw.data)
-
 	if bsLen > bbw.freeCap {
-		newDataCap := cap(bbw.data) << 1
-		currentMaxSize := dataLimit + bsLen - bbw.freeCap
-		for currentMaxSize > newDataCap {
-			newDataCap <<= 1
+		newCap := cap(bbw.data) << 1
+		currentMaxSize := len(bbw.data) + bsLen - bbw.freeCap
+		for currentMaxSize > newCap {
+			newCap <<= 1
 		}
 
-		newData := make([]byte, newDataCap)
+		newData := make([]byte, newCap)
 		copy(newData, bbw.data)
 		bbw.data = newData
-		bbw.freeCap = newDataCap - bbw.cursor
+		bbw.freeCap = newCap - bbw.cursor
 	}
 
 	copy(bbw.data[bbw.cursor:], bs)
@@ -953,6 +1111,23 @@ func (bbw *bytesWriter) write(bs []byte) {
 
 func (bbw *bytesWriter) bytes() []byte {
 	return bbw.data[:bbw.cursor]
+}
+
+func (bbw *bytesWriter) grow(n int) {
+	newCap := (cap(bbw.data) << 1) + n
+	newData := make([]byte, newCap)
+	copy(newData, bbw.data)
+	bbw.data = newData
+	bbw.freeCap = newCap - bbw.cursor
+}
+
+func (bbw *bytesWriter) growAppend(n int) {
+	bbw.data = append(bbw.data, make([]byte, n)...)
+	bbw.freeCap = cap(bbw.data) + n - bbw.cursor
+}
+
+func (bbw *bytesWriter) yield() int {
+	return bbw.cursor
 }
 
 // ################################################################################################################## \\

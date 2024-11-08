@@ -78,7 +78,7 @@ func Benchmark_ProtoSerializer(b *testing.B) {
 func BenchmarkType_ProtoSerializer(b *testing.B) {
 	b.Run("slice serialization", func(b *testing.B) {
 		b.Run("slice of int", func(b *testing.B) {
-			msg := &grpc_item.SliceTestData{
+			msg := &grpc_item.IntSliceTestData{
 				IntList: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			}
 			serializer := go_serializer.NewProtoSerializer()
@@ -89,7 +89,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.IntSliceTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -97,7 +97,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.IntSliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -105,7 +105,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
-				var target grpc_item.SliceTestData
+				var target grpc_item.IntSliceTestData
 				bs, err := serializer.Serialize(msg)
 				require.NoError(b, err)
 				err = serializer.Deserialize(bs, &target)
@@ -211,9 +211,247 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 		})
 
+		b.Run("slice of uint", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				UintList: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, err := serializer.Serialize(msg)
+				require.NoError(b, err)
+				err = serializer.Deserialize(bs, &target)
+				require.NoError(b, err)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
+
 		b.Run("slice of string", func(b *testing.B) {
 			msg := &grpc_item.SliceTestData{
 				StrList: []string{"first-item", "second-item", "third-item", "fourth-item"},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("slice of slice of bytes", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				BytesBytesList: [][]byte{
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+				},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("slice of slice of bytes", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				BytesBytesList: [][]byte{
+					{},
+					{},
+					{},
+					{},
+					{},
+				},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("slice of bytes", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				BytesList: []byte{255, 0, 4, 8, 16, 48, 56, 32, 44, 200},
+			}
+			serializer := go_serializer.NewProtoSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+				}
+
+				var target grpc_item.SliceTestData
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := serializer.Serialize(msg)
+
+				var target grpc_item.SliceTestData
+				for i := 0; i < b.N; i++ {
+					_ = serializer.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				var target grpc_item.SliceTestData
+				bs, _ := serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = serializer.Serialize(msg)
+					_ = serializer.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("slice of bytes", func(b *testing.B) {
+			msg := &grpc_item.SliceTestData{
+				BytesList: []byte{math.MaxUint8,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
+				},
 			}
 			serializer := go_serializer.NewProtoSerializer()
 

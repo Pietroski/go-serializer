@@ -95,4 +95,8 @@ func main() {
 		}
 	}
 	fmt.Println("FINISH")
+
+	//ii := []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	//([]int64)(unsafe.Slice(&ii[0], len(ii)))
+	fmt.Println(bs)
 }

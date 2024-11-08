@@ -12,12 +12,18 @@ import (
 )
 
 type (
+	IntSliceTestData struct {
+		IntList []int64 `json:"int_list,omitempty"`
+	}
+
 	ProtoTypeSliceTestData struct {
 		IntList        []int64      `json:"int_list,omitempty"`
+		UintList       []uint64     `json:"uint_list,omitempty"`
 		StrList        []string     `json:"str_list,omitempty"`
 		StructList     []SliceItem  `json:"struct_list,omitempty"`
 		PtrStructList  []*SliceItem `json:"ptr_struct_list,omitempty"`
 		BytesBytesList [][]byte     `json:"bytes_bytes_list,omitempty"`
+		BytesList      []byte       `json:"bytes_list,omitempty"`
 	}
 
 	SliceTestData struct {
