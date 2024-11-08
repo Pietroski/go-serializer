@@ -9,7 +9,7 @@ import (
 	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
 )
 
-func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
+func TestRawBinarySerializer_Marshal(t *testing.T) {
 	t.Run("success TestData", func(t *testing.T) {
 		serializer := NewRawBinarySerializer()
 
@@ -306,11 +306,11 @@ func TestUnsafeBinarySerializer_Marshal(t *testing.T) {
 	})
 
 	t.Run("Test Benchmark Data", func(t *testing.T) {
-		Test_UnsafeBinary_Benchmark_Data(t)
+		Test_RawBinary_Benchmark_Data(t)
 	})
 }
 
-func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
+func Test_RawBinary_Benchmark_Data(t *testing.T) {
 	t.Run("main benchmark test data", func(t *testing.T) {
 		msg := item_models.Item{
 			Id:     "any-item",
@@ -338,7 +338,7 @@ func Test_UnsafeBinary_Benchmark_Data(t *testing.T) {
 	t.Run("slice serialization", func(t *testing.T) {
 		t.Run("slice of int", func(t *testing.T) {
 			msg := &ProtoTypeSliceTestData{
-				IntList:  []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+				IntList:  []int64{math.MaxInt64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 				UintList: []uint64{math.MaxInt64, 2, 3, 4, 5, 6, 7, 8, 9, math.MaxUint64},
 				StrList:  []string{"first-item", "second-item", "third-item", "fourth-item"},
 				BytesBytesList: [][]byte{

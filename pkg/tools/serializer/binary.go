@@ -3,7 +3,6 @@ package go_serializer
 import (
 	"math"
 	"reflect"
-	"unsafe"
 )
 
 type BinarySerializer struct{}
@@ -125,7 +124,7 @@ func (s *BinarySerializer) serializePrimitive(bbw *bytesWriter, data interface{}
 
 		return true
 	case string:
-		s.encodeUnsafeString(bbw, v)
+		s.encodeString(bbw, v)
 		return true
 	case int:
 		bbw.write(AddUint64(uint64(v)))
@@ -188,7 +187,7 @@ func (s *BinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *reflec
 			bbw.put(0)
 		}
 	case reflect.String:
-		s.encodeUnsafeString(bbw, v.String())
+		s.encodeString(bbw, v.String())
 	case reflect.Int:
 		bbw.write(AddUint64(uint64(v.Int())))
 	case reflect.Int8:
@@ -228,7 +227,7 @@ func (s *BinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *reflec
 func (s *BinarySerializer) deserializePrimitive(bbr *bytesReader, field *reflect.Value) bool {
 	switch field.Kind() {
 	case reflect.String:
-		field.SetString(s.decodeUnsafeString(bbr))
+		field.SetString(s.decodeString(bbr))
 	case reflect.Bool:
 		field.SetBool(bbr.next() == 1)
 		return true
@@ -304,7 +303,7 @@ func (s *BinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, data i
 		return true
 	case []string:
 		for _, str := range v {
-			s.encodeUnsafeString(bbw, str)
+			s.encodeString(bbw, str)
 		}
 
 		return true
@@ -430,7 +429,7 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 		return true
 	case "[]string":
 		for i := 0; i < length; i++ {
-			s.encodeUnsafeString(bbw, field.Index(i).String())
+			s.encodeString(bbw, field.Index(i).String())
 		}
 
 		return true
@@ -464,6 +463,12 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 		}
 
 		return true
+
+		//slice := field.Interface().([]int64)
+		//for _, v := range slice {
+		//	bbw.write(AddUint64(uint64(v)))
+		//}
+		//return true
 	case "[]uint":
 		for i := 0; i < length; i++ {
 			bbw.write(AddUint64(field.Index(i).Uint()))
@@ -548,7 +553,7 @@ func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
 	case "[]string":
 		ss := make([]string, length)
 		for i := range ss {
-			ss[i] = s.decodeUnsafeString(bbr)
+			ss[i] = s.decodeString(bbr)
 		}
 
 		field.Set(reflect.ValueOf(ss))
@@ -639,12 +644,12 @@ func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
 	case "[][]uint8":
 		ii := make([][]byte, length)
 		for i := range ii {
-			l := Uint32(bbr.read(4))
+			l := int(Uint32(bbr.read(4)))
 			if l == 0 {
 				continue
 			}
 
-			ii[i] = bbr.read(int(l))
+			ii[i] = bbr.read(l)
 		}
 
 		field.Set(reflect.ValueOf(ii))
@@ -866,14 +871,14 @@ func (s *BinarySerializer) mapEncode(bbw *bytesWriter, field *reflect.Value) {
 		return
 	case map[string]string:
 		for k, v := range rawFieldValue {
-			s.encodeUnsafeString(bbw, k)
-			s.encodeUnsafeString(bbw, v)
+			s.encodeString(bbw, k)
+			s.encodeString(bbw, v)
 		}
 
 		return
 	case map[string]interface{}:
 		for k, v := range rawFieldValue {
-			s.encodeUnsafeString(bbw, k)
+			s.encodeString(bbw, k)
 			bbw.write(s.encode(v))
 		}
 
@@ -938,7 +943,7 @@ func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 	case map[string]string:
 		tmtd := make(map[string]string, length)
 		for i := uint32(0); i < length; i++ {
-			tmtd[s.decodeUnsafeString(bbr)] = s.decodeUnsafeString(bbr)
+			tmtd[s.decodeString(bbr)] = s.decodeString(bbr)
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
@@ -947,7 +952,7 @@ func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 		for i := uint32(0); i < length; i++ {
 			var itrfc interface{}
 			bbr.skip(s.decode(bbr.bytesFromCursor(), &itrfc))
-			tmtd[s.decodeUnsafeString(bbr)] = itrfc
+			tmtd[s.decodeString(bbr)] = itrfc
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
@@ -980,13 +985,11 @@ func (s *BinarySerializer) mapDecode(bbr *bytesReader, field *reflect.Value) {
 // string unsafe encoder
 // ################################################################################################################## \\
 
-func (s *BinarySerializer) encodeUnsafeString(bbw *bytesWriter, str string) {
-	strLen := len(str)
-	bbw.write(AddUint32(uint32(strLen)))
-	bbw.write(unsafe.Slice(unsafe.StringData(str), strLen))
+func (s *BinarySerializer) encodeString(bbw *bytesWriter, str string) {
+	bbw.write(AddUint32(uint32(len(str))))
+	bbw.write([]byte(str))
 }
 
-func (s *BinarySerializer) decodeUnsafeString(bbr *bytesReader) string {
-	bs := bbr.read(int(Uint32(bbr.read(4))))
-	return unsafe.String(unsafe.SliceData(bs), len(bs))
+func (s *BinarySerializer) decodeString(bbr *bytesReader) string {
+	return string(bbr.read(int(Uint32(bbr.read(4)))))
 }

@@ -140,7 +140,8 @@ func (s *RawBinarySerializer) serializePrimitive(bbw *bytesWriter, data interfac
 		bbw.write(AddUint32(uint32(v)))
 		return true
 	case int64:
-		bbw.write(AddUint64(uint64(v)))
+		bbw.write(unsafe.Slice((*byte)(unsafe.Pointer(&v)), 8))
+		//bbw.write(AddUint64(uint64(v)))
 		return true
 	case uint:
 		bbw.write(AddUint64(uint64(v)))
@@ -198,7 +199,7 @@ func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesWriter, v *ref
 	case reflect.Int32:
 		bbw.write(AddUint32(uint32(v.Int())))
 	case reflect.Int64:
-		bbw.write(AddUint64(uint64(v.Int())))
+		bbw.write(unsafe.Slice((*byte)(v.UnsafePointer()), 8)) // AddUint64(uint64(v.Int()))
 	case reflect.Uint:
 		bbw.write(AddUint64(v.Uint()))
 	case reflect.Uint8:
@@ -438,63 +439,54 @@ func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
 
 		return true
 	case "[]int":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint64(uint64(field.Index(i).Int())))
-		}
-
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*8))
 		return true
 	case "[]int8":
-		for i := 0; i < length; i++ {
-			bbw.put(byte(field.Index(i).Int()))
-		}
+		//for i := 0; i < length; i++ {
+		//	bbw.put(byte(field.Index(i).Int()))
+		//}
 
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()))
 		return true
 	case "[]int16":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint16(uint16(field.Index(i).Int())))
-		}
-
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*2))
 		return true
 	case "[]int32":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint32(uint32(field.Index(i).Int())))
-		}
-
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*4))
 		return true
 	case "[]int64":
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*8))
+		return true
+	case "[]uint":
 		//for i := 0; i < length; i++ {
-		//	bbw.write(AddUint64(uint64(field.Index(i).Int())))
+		//	bbw.write(AddUint64(field.Index(i).Uint()))
 		//}
 
 		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*8))
-
-		return true
-	case "[]uint":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint64(field.Index(i).Uint()))
-		}
-
 		return true
 	case "[]uint8":
 		bbw.write(field.Bytes())
 		return true
 	case "[]uint16":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint16(uint16(field.Index(i).Uint())))
-		}
+		//for i := 0; i < length; i++ {
+		//	bbw.write(AddUint16(uint16(field.Index(i).Uint())))
+		//}
 
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*2))
 		return true
 	case "[]uint32":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint32(uint32(field.Index(i).Uint())))
-		}
+		//for i := 0; i < length; i++ {
+		//	bbw.write(AddUint32(uint32(field.Index(i).Uint())))
+		//}
 
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*4))
 		return true
 	case "[]uint64":
-		for i := 0; i < length; i++ {
-			bbw.write(AddUint64(field.Index(i).Uint()))
-		}
+		//for i := 0; i < length; i++ {
+		//	bbw.write(AddUint64(field.Index(i).Uint()))
+		//}
 
+		bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()*8))
 		return true
 	case "[]float32":
 		for i := 0; i < length; i++ {
@@ -567,41 +559,46 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		field.Set(reflect.ValueOf(bb))
 		return true
 	case "[]int":
-		ii := make([]int, length)
-		for i := range ii {
-			ii[i] = int(Uint64(bbr.read(8)))
-		}
+		//ii := make([]int, length)
+		//for i := range ii {
+		//	ii[i] = int(Uint64(bbr.read(8)))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*int64)(unsafe.Pointer(&bbr.read(length * 8)[0])), length)))
 		return true
 	case "[]int8":
-		ii := make([]int8, length)
-		for i := range ii {
-			ii[i] = int8(bbr.next())
-		}
+		//ii := make([]int8, length)
+		//for i := range ii {
+		//	ii[i] = int8(bbr.next())
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*int8)(unsafe.Pointer(&bbr.read(length)[0])), length)))
 		return true
 	case "[]int16":
-		ii := make([]int16, length)
-		for i := range ii {
-			ii[i] = int16(Uint16(bbr.read(2)))
-		}
+		//ii := make([]int16, length)
+		//for i := range ii {
+		//	ii[i] = int16(Uint16(bbr.read(2)))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*int16)(unsafe.Pointer(&bbr.read(length * 2)[0])), length)))
 		return true
 	case "[]int32":
-		ii := make([]int32, length)
-		for i := range ii {
-			ii[i] = int32(Uint32(bbr.read(4)))
-		}
+		//ii := make([]int32, length)
+		//for i := range ii {
+		//	ii[i] = int32(Uint32(bbr.read(4)))
+		//}
+		//
+		// field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*int32)(unsafe.Pointer(&bbr.read(length * 4)[0])), length)))
 		return true
 	case "[]int64":
-		bsLen := 8 * int(length)
-		field.Set(reflect.ValueOf(unsafe.Slice((*int64)(unsafe.Pointer(&bbr.read(bsLen)[0])), bsLen/8)))
-
 		//ii := make([]int64, length)
 		//for i := range ii {
 		//	ii[i] = int64(Uint64(bbr.read(8)))
@@ -609,51 +606,61 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		//
 		// field.Set(reflect.ValueOf(ii))
 
+		//bsLen := 8 * int(length)
+		field.Set(reflect.ValueOf(unsafe.Slice((*int64)(unsafe.Pointer(&bbr.read(length * 8)[0])), length)))
 		return true
 	case "[]uint":
-		ii := make([]uint, length)
-		for i := range ii {
-			ii[i] = uint(Uint64(bbr.read(8)))
-		}
+		//ii := make([]uint, length)
+		//for i := range ii {
+		//	ii[i] = uint(Uint64(bbr.read(8)))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*uint64)(unsafe.Pointer(&bbr.read(length * 8)[0])), length)))
 		return true
 	case "[]uint8":
 		field.SetBytes(bbr.read(length))
 		return true
 	case "[]uint16":
-		ii := make([]uint16, length)
-		for i := range ii {
-			ii[i] = uint16(Uint64(bbr.read(2)))
-		}
+		//ii := make([]uint16, length)
+		//for i := range ii {
+		//	ii[i] = uint16(Uint64(bbr.read(2)))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*uint16)(unsafe.Pointer(&bbr.read(length * 2)[0])), length)))
 		return true
 	case "[]uint32":
-		ii := make([]uint32, length)
-		for i := range ii {
-			ii[i] = uint32(Uint64(bbr.read(4)))
-		}
+		//ii := make([]uint32, length)
+		//for i := range ii {
+		//	ii[i] = uint32(Uint64(bbr.read(4)))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*uint32)(unsafe.Pointer(&bbr.read(length * 4)[0])), length)))
 		return true
 	case "[]uint64":
-		ii := make([]uint64, length)
-		for i := range ii {
-			ii[i] = Uint64(bbr.read(8))
-		}
+		//ii := make([]uint64, length)
+		//for i := range ii {
+		//	ii[i] = Uint64(bbr.read(8))
+		//}
+		//
+		//field.Set(reflect.ValueOf(ii))
 
-		field.Set(reflect.ValueOf(ii))
+		field.Set(reflect.ValueOf(unsafe.Slice((*uint64)(unsafe.Pointer(&bbr.read(length * 8)[0])), length)))
 		return true
 	case "[][]uint8":
 		ii := make([][]byte, length)
 		for i := range ii {
-			l := Uint32(bbr.read(4))
+			l := int(Uint32(bbr.read(4)))
 			if l == 0 {
 				continue
 			}
 
-			ii[i] = bbr.read(int(l))
+			ii[i] = bbr.read(l)
 		}
 
 		field.Set(reflect.ValueOf(ii))

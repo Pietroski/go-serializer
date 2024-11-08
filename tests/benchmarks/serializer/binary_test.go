@@ -158,6 +158,45 @@ func BenchmarkType_BinarySerializer(b *testing.B) {
 	b.Run("int serialization", func(b *testing.B) {
 		serializer := go_serializer.NewBinarySerializer()
 
+		msg := math.MaxInt64
+
+		b.Run("encoding", func(b *testing.B) {
+			var bs []byte
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+			}
+
+			var target uint64
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+		})
+
+		b.Run("decoding", func(b *testing.B) {
+			bs, _ := serializer.Serialize(msg)
+
+			var target uint64
+			for i := 0; i < b.N; i++ {
+				_ = serializer.Deserialize(bs, &target)
+			}
+			b.Log(target)
+		})
+
+		b.Run("encoding - decoding", func(b *testing.B) {
+			var target uint64
+			bs, _ := serializer.Serialize(msg)
+			_ = serializer.Deserialize(bs, &target)
+			b.Log(target)
+
+			for i := 0; i < b.N; i++ {
+				bs, _ = serializer.Serialize(msg)
+				_ = serializer.Deserialize(bs, &target)
+			}
+		})
+	})
+
+	b.Run("uint serialization", func(b *testing.B) {
+		serializer := go_serializer.NewBinarySerializer()
+
 		msg := uint64(math.MaxUint64)
 
 		b.Run("encoding", func(b *testing.B) {
