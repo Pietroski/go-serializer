@@ -542,7 +542,7 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 }
 
 func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
-	bbr *bytesReader, field *reflect.Value, length uint32,
+	bbr *bytesReader, field *reflect.Value, length int,
 ) bool {
 	switch field.Type().String() {
 	case "[]string":
@@ -610,7 +610,7 @@ func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
 		field.Set(reflect.ValueOf(ii))
 		return true
 	case "[]uint8":
-		field.Set(reflect.ValueOf(bbr.read(int(length))))
+		field.SetBytes(bbr.read(length))
 		return true
 	case "[]uint16":
 		ii := make([]uint16, length)
@@ -780,7 +780,7 @@ func (s *BinarySerializer) sliceArrayEncode(bbw *bytesWriter, field *reflect.Val
 }
 
 func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Value) {
-	length := Uint32(bbr.read(4))
+	length := int(Uint32(bbr.read(4)))
 	if length == 0 {
 		return
 	}
@@ -789,8 +789,8 @@ func (s *BinarySerializer) sliceArrayDecode(bbr *bytesReader, field *reflect.Val
 		return
 	}
 
-	field.Set(reflect.MakeSlice(field.Type(), int(length), int(length)))
-	for i := uint32(0); i < length; i++ {
+	field.Set(reflect.MakeSlice(field.Type(), length, length))
+	for i := 0; i < length; i++ {
 		f := field.Index(int(i))
 
 		if s.deserializePrimitive(bbr, &f) {

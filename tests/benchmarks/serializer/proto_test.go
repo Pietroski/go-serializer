@@ -386,8 +386,8 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 		})
 
 		b.Run("slice of bytes", func(b *testing.B) {
-			msg := &grpc_item.SliceTestData{
-				BytesList: []byte{255, 0, 4, 8, 16, 48, 56, 32, 44, 200},
+			msg := &grpc_item.ByteSliceTestData{
+				ByteList: []byte{255, 0, 4, 8, 16, 48, 56, 32, 44, 200},
 			}
 			serializer := go_serializer.NewProtoSerializer()
 
@@ -397,7 +397,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -405,7 +405,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -413,7 +413,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
@@ -426,8 +426,8 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 		})
 
 		b.Run("slice of bytes", func(b *testing.B) {
-			msg := &grpc_item.SliceTestData{
-				BytesList: []byte{math.MaxUint8,
+			msg := &grpc_item.ByteSliceTestData{
+				ByteList: []byte{math.MaxUint8,
 					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
 					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
 					255, 0, 4, 8, 16, 48, 56, 32, 44, 200,
@@ -461,7 +461,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 					bs, _ = serializer.Serialize(msg)
 				}
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)
 			})
@@ -469,7 +469,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			b.Run("decoding", func(b *testing.B) {
 				bs, _ := serializer.Serialize(msg)
 
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = serializer.Deserialize(bs, &target)
 				}
@@ -477,7 +477,7 @@ func BenchmarkType_ProtoSerializer(b *testing.B) {
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
-				var target grpc_item.SliceTestData
+				var target grpc_item.ByteSliceTestData
 				bs, _ := serializer.Serialize(msg)
 				_ = serializer.Deserialize(bs, &target)
 				b.Log(target)

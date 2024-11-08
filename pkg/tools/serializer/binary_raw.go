@@ -333,12 +333,13 @@ func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesWriter, dat
 
 		return true
 	case []int64:
-		for _, n := range v {
-			bbw.write(AddUint64(uint64(n)))
-		}
+		//for _, n := range v {
+		//	bbw.write(AddUint64(uint64(n)))
+		//}
+		//
+		//return true
 
-		//bbw.write(unsafe.Slice((*byte)(unsafe.Pointer(&v[0])), len(v)*8))
-
+		bbw.write(unsafe.Slice((*byte)(unsafe.Pointer(&v[0])), len(v)*8))
 		return true
 	case []uint:
 		for _, n := range v {
@@ -476,7 +477,6 @@ func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
 		return true
 	case "[]uint8":
 		bbw.write(field.Bytes())
-		//bbw.write(unsafe.Slice((*byte)(field.UnsafePointer()), field.Len()))
 		return true
 	case "[]uint16":
 		for i := 0; i < length; i++ {
@@ -619,11 +619,7 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		field.Set(reflect.ValueOf(ii))
 		return true
 	case "[]uint8":
-		//field.Set(reflect.ValueOf(bbr.read(length)))
-
 		field.SetBytes(bbr.read(length))
-
-		//field.Set(reflect.ValueOf(unsafe.Slice((*byte)(&bbr.read(length)[0]), length)))
 		return true
 	case "[]uint16":
 		ii := make([]uint16, length)
@@ -1100,17 +1096,40 @@ func (bbw *bytesWriter) write(bs []byte) {
 
 		newData := make([]byte, newCap)
 		copy(newData, bbw.data)
+		//bbw.unsafeCopy(newData, bbw.data)
 		bbw.data = newData
 		bbw.freeCap = newCap - bbw.cursor
 	}
 
 	copy(bbw.data[bbw.cursor:], bs)
+	//bbw.unsafeCopyFrom(bs)
 	bbw.cursor += bsLen
 	bbw.freeCap -= bsLen
 }
 
 func (bbw *bytesWriter) bytes() []byte {
 	return bbw.data[:bbw.cursor]
+}
+
+func (bbw *bytesWriter) unsafeCopy(dst, src []byte) {
+	if len(src) == 0 {
+		return
+	}
+
+	// Get pointer to dst data
+	dstPtr := unsafe.Pointer(unsafe.SliceData(dst))
+
+	// Get pointer to src data
+	srcPtr := unsafe.Pointer(unsafe.SliceData(src))
+
+	// Copy the data
+	copy(unsafe.Slice((*byte)(dstPtr), len(src)), unsafe.Slice((*byte)(srcPtr), len(src)))
+}
+
+func (bbw *bytesWriter) unsafeCopyFrom(bs []byte) {
+	dstPtr := unsafe.Add(unsafe.Pointer(unsafe.SliceData(bbw.data)), bbw.cursor)
+	srcPtr := unsafe.Pointer(unsafe.SliceData(bs))
+	copy(unsafe.Slice((*byte)(dstPtr), len(bs)), unsafe.Slice((*byte)(srcPtr), len(bs)))
 }
 
 func (bbw *bytesWriter) grow(n int) {

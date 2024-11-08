@@ -64,3 +64,30 @@ func TestExample(t *testing.T) {
 		panic("unexpected result")
 	}
 }
+
+func unsafeCopy(dst, src []byte) {
+	if len(src) == 0 {
+		return
+	}
+
+	// Get pointer to dst data
+	dstPtr := unsafe.Pointer(unsafe.SliceData(dst))
+
+	// Get pointer to src data
+	srcPtr := unsafe.Pointer(unsafe.SliceData(src))
+
+	// Copy the data
+	copy(unsafe.Slice((*byte)(dstPtr), len(src)), unsafe.Slice((*byte)(srcPtr), len(src)))
+}
+
+func TestUnsafeExample(t *testing.T) {
+	// Create destination with correct capacity
+	dst := make([]byte, 10) // "Hello" with room for "World"
+	copy(dst, []byte{5, 10, 15, 20, 25})
+
+	src := []byte{45, 50, 55, 70, 75, 80}
+
+	unsafeCopy(dst, src)
+
+	t.Log(dst)
+}

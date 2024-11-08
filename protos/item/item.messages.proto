@@ -33,6 +33,10 @@ message IntSliceTestData {
   repeated int64 int_list = 1;
 }
 
+message ByteSliceTestData {
+  bytes byte_list = 1;
+}
+
 message SliceTestData {
   repeated int64 int_list = 1;
   repeated uint64 uint_list = 2;
