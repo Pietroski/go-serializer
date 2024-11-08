@@ -91,3 +91,103 @@ func TestUnsafeExample(t *testing.T) {
 
 	t.Log(dst)
 }
+
+type bytesWriter struct {
+	data   []byte
+	cursor int
+
+	freeCap int // cap(data) - len(data)
+}
+
+func newBytesWriter(data []byte) *bytesWriter {
+	capacity := cap(data)
+	length := len(data)
+	bbw := &bytesWriter{
+		data:    data,
+		freeCap: capacity - length,
+	}
+	if bbw.freeCap == 0 {
+		bbw.freeCap = capacity
+	}
+	if length == 0 {
+		bbw.data = bbw.data[:capacity]
+	}
+
+	return bbw
+}
+
+func (bbw *bytesWriter) put(b byte) {
+	if 1 >= bbw.freeCap {
+		newDataCap := cap(bbw.data) << 1
+		newData := make([]byte, newDataCap)
+		copy(newData, bbw.data)
+		bbw.data = newData
+		bbw.freeCap = newDataCap - bbw.cursor
+	}
+
+	bbw.data[bbw.cursor] = b
+	bbw.cursor++
+	bbw.freeCap--
+}
+
+func (bbw *bytesWriter) write(bs []byte) {
+	bsLen := len(bs)
+	if bsLen > bbw.freeCap {
+		newCap := cap(bbw.data) << 1
+		currentMaxSize := len(bbw.data) + bsLen - bbw.freeCap
+		for currentMaxSize > newCap {
+			newCap <<= 1
+		}
+
+		newData := make([]byte, newCap)
+		copy(newData, bbw.data)
+		bbw.data = newData
+		bbw.freeCap = newCap - bbw.cursor
+	}
+
+	copy(bbw.data[bbw.cursor:], bs)
+	bbw.cursor += bsLen
+	bbw.freeCap -= bsLen
+}
+
+func (bbw *bytesWriter) bytes() []byte {
+	return bbw.data[:bbw.cursor]
+}
+
+func (bbw *bytesWriter) unsafeCopy(dst, src []byte) {
+	if len(src) == 0 {
+		return
+	}
+
+	// Get pointer to dst data
+	dstPtr := unsafe.Pointer(unsafe.SliceData(dst))
+
+	// Get pointer to src data
+	srcPtr := unsafe.Pointer(unsafe.SliceData(src))
+
+	// Copy the data
+	copy(unsafe.Slice((*byte)(dstPtr), len(src)), unsafe.Slice((*byte)(srcPtr), len(src)))
+}
+
+func (bbw *bytesWriter) unsafeCopyFrom(bs []byte) {
+	dstPtr := unsafe.Add(unsafe.Pointer(unsafe.SliceData(bbw.data)), bbw.cursor)
+	srcPtr := unsafe.Pointer(unsafe.SliceData(bs))
+	copy(unsafe.Slice((*byte)(dstPtr), len(bs)), unsafe.Slice((*byte)(srcPtr), len(bs)))
+}
+
+func (bbw *bytesWriter) grow(n int) {
+	newCap := (cap(bbw.data) << 1) + n
+	newData := make([]byte, newCap)
+	copy(newData, bbw.data)
+	bbw.data = newData
+	bbw.freeCap = newCap - bbw.cursor
+}
+
+func (bbw *bytesWriter) growAppend(n int) {
+	bbw.data = append(bbw.data, make([]byte, n)...)
+	bbw.freeCap = cap(bbw.data) + n - bbw.cursor
+}
+
+func (bbw *bytesWriter) yield() int {
+	return bbw.cursor
+}
