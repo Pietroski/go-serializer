@@ -8,6 +8,10 @@ import (
 )
 
 type (
+	IntSliceTestData struct {
+		IntList []int64 `json:"int_list,omitempty"`
+	}
+
 	ProtoTypeSliceTestData struct {
 		IntList        []int64      `json:"int_list,omitempty"`
 		UintList       []uint64     `json:"uint_list,omitempty"`
@@ -506,6 +510,47 @@ func Test_BSReader(t *testing.T) {
 }
 
 func Test_Benchmark_Data(t *testing.T) {
+	t.Run("slice serialization", func(t *testing.T) {
+		t.Run("slice of int", func(t *testing.T) {
+			msg := &IntSliceTestData{
+				IntList: []int64{math.MaxInt64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			}
+			serializer := NewBinarySerializer()
+
+			var target ProtoTypeSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
+
+		t.Run("slice of int", func(t *testing.T) {
+			msg := &ProtoTypeSliceTestData{
+				IntList:  []int64{math.MaxInt64, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+				UintList: []uint64{math.MaxInt64, 2, 3, 4, 5, 6, 7, 8, 9, math.MaxUint64},
+				StrList:  []string{"first-item", "second-item", "third-item", "fourth-item"},
+				BytesBytesList: [][]byte{
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{255, 0, 4, 8, 16},
+					{},
+				},
+				BytesList: []byte{255, 0, 4, 8, 16, 48, 56, 32, 44, 200},
+			}
+			serializer := NewRawBinarySerializer()
+
+			var target ProtoTypeSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
+	})
+
 	t.Run("success MapTestData", func(t *testing.T) {
 		t.Run("map of int to int", func(t *testing.T) {
 			serializer := NewBinarySerializer()

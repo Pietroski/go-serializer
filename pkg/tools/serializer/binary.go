@@ -463,12 +463,6 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 		}
 
 		return true
-
-		//slice := field.Interface().([]int64)
-		//for _, v := range slice {
-		//	bbw.write(AddUint64(uint64(v)))
-		//}
-		//return true
 	case "[]uint":
 		for i := 0; i < length; i++ {
 			bbw.write(AddUint64(field.Index(i).Uint()))
