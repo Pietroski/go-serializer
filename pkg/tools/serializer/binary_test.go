@@ -401,7 +401,7 @@ func TestBinarySerializer_Marshal(t *testing.T) {
 //
 // goos: darwin
 // goarch: arm64
-// pkg: gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer
+// pkg: gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/tools/serializer
 // cpu: Apple M2 Max
 // Benchmark_BinaryBytesReader
 // Benchmark_BinaryBytesReader/1

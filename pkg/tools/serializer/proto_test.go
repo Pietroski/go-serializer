@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	grpc_item "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/generated/go/pkg/item"
-	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
+	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
+	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 )
 
 func Test_ProtoSerializer(t *testing.T) {

@@ -458,10 +458,12 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 
 		return true
 	case "[]int64":
+		ii := field.Int64Slice()
 		for i := 0; i < length; i++ {
-			bbw.write(AddUint64(uint64(field.Index(i).Int())))
+			bbw.write(AddUint64(uint64(ii[i])))
 		}
 
+		//bbw.write(field.Int64SliceToBytes())
 		return true
 	case "[]uint":
 		for i := 0; i < length; i++ {
@@ -599,6 +601,9 @@ func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
 		}
 
 		field.Set(reflect.ValueOf(ii))
+		//field.SetInt64Slice(ii)
+
+		// field.SetBytesIntoInt64Slice(bbr.read(length * 8))
 		return true
 	case "[]uint":
 		ii := make([]uint, length)

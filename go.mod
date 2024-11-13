@@ -1,4 +1,4 @@
-module gitlab.com/pietroski-software-company/tools/serializer/go-serializer
+module gitlab.com/pietroski-software-company/devex/golang/serializer
 
 go 1.23
 
@@ -8,7 +8,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	go.uber.org/mock v0.5.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1
 )
 

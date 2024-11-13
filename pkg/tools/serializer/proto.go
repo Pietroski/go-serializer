@@ -1,27 +1,27 @@
 package go_serializer
 
 import (
+	"fmt"
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/models"
 	"google.golang.org/protobuf/proto"
-
-	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type (
 	protoSerializer struct{}
 )
 
-func NewProtoSerializer() Serializer {
+func NewProtoSerializer() models.Serializer {
 	return &protoSerializer{}
 }
 
 func (s *protoSerializer) Serialize(payload interface{}) ([]byte, error) {
 	protoPayload, ok := payload.(proto.Message)
 	if !ok {
-		return []byte{}, error_builder.Err(WrongPayloadTypeErrMsg, nil)
+		return []byte{}, fmt.Errorf(models.WrongPayloadTypeErrMsg, nil)
 	}
 	bs, err := proto.Marshal(protoPayload)
 	if err != nil {
-		return []byte{}, error_builder.Err(EncodeErrMsg, err)
+		return []byte{}, fmt.Errorf(models.EncodeErrMsg, err)
 	}
 
 	return bs, err
@@ -30,10 +30,10 @@ func (s *protoSerializer) Serialize(payload interface{}) ([]byte, error) {
 func (s *protoSerializer) Deserialize(payload []byte, target interface{}) error {
 	protoTarget, ok := target.(proto.Message)
 	if !ok {
-		return error_builder.Err(WrongTargetTypeErrMsg, nil)
+		return fmt.Errorf(models.WrongTargetTypeErrMsg, nil)
 	}
 	if err := proto.Unmarshal(payload, protoTarget); err != nil {
-		return error_builder.Err(DecodeErrMsg, err)
+		return fmt.Errorf(models.DecodeErrMsg, err)
 	}
 
 	return nil
@@ -42,11 +42,11 @@ func (s *protoSerializer) Deserialize(payload []byte, target interface{}) error 
 func (s *protoSerializer) DataRebind(payload interface{}, target interface{}) error {
 	bs, err := s.Serialize(payload)
 	if err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(models.RebinderErrMsg, err)
 	}
 
 	if err = s.Deserialize(bs, target); err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(models.RebinderErrMsg, err)
 	}
 
 	return nil

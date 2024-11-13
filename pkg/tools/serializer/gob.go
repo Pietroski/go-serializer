@@ -3,9 +3,8 @@ package go_serializer
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"io"
-
-	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
 )
 
 type gobSerializer struct {
@@ -24,7 +23,7 @@ func (s *gobSerializer) Serialize(payload interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	encoder := gob.NewEncoder(&buf)
 	if err := encoder.Encode(payload); err != nil {
-		return []byte{}, error_builder.Err(EncodeErrMsg, err)
+		return []byte{}, fmt.Errorf(EncodeErrMsg, err)
 	}
 
 	return buf.Bytes(), nil
@@ -33,7 +32,7 @@ func (s *gobSerializer) Serialize(payload interface{}) ([]byte, error) {
 func (s *gobSerializer) Deserialize(payload []byte, target interface{}) error {
 	decoder := gob.NewDecoder(bytes.NewReader(payload))
 	if err := decoder.Decode(target); err != nil {
-		return error_builder.Err(DecodeErrMsg, err)
+		return fmt.Errorf(DecodeErrMsg, err)
 	}
 
 	return nil
@@ -42,11 +41,11 @@ func (s *gobSerializer) Deserialize(payload []byte, target interface{}) error {
 func (s *gobSerializer) DataRebind(payload interface{}, target interface{}) error {
 	bs, err := s.Serialize(payload)
 	if err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(RebinderErrMsg, err)
 	}
 
 	if err = s.Deserialize(bs, target); err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(RebinderErrMsg, err)
 	}
 
 	return nil

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MOD_NAME=gitlab.com/pietroski-software-company/tools/serializer/go-serializer/protos/schemas/generated
+MOD_NAME=gitlab.com/pietroski-software-company/devex/golang/serializer/protos/schemas/generated
 PROTO_PATH=protos
 OUTPUT_PATH=generated
 SWAGGER_PATH="$OUTPUT_PATH/swagger"

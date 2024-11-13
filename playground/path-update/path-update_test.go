@@ -2,7 +2,7 @@ package path_update
 
 import (
 	"github.com/stretchr/testify/require"
-	go_serializer "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer"
+	go_serializer "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/tools/serializer"
 	"testing"
 )
 

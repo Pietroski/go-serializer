@@ -23,7 +23,7 @@ local run_tests = [
   'go test -race --tags=unit -cover ./...',
 ];
 
-local remote_git_repo_address = 'https://gitlab.com/pietroski-software-company/tools/serializer/go-serializer.git';
+local remote_git_repo_address = 'https://gitlab.com/pietroski-software-company/devex/golang/serializer.git';
 
 local tests_cmd = std.flattenArrays([
   set_netrc,

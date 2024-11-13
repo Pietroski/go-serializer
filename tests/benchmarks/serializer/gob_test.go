@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	grpc_item "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/generated/go/pkg/item"
-	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
-	go_serializer "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer"
+	"gitlab.com/pietroski-software-company/devex/golang/serializer"
+	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
+	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 )
 
 func Benchmark_GobSerializer(b *testing.B) {
@@ -23,9 +23,9 @@ func Benchmark_GobSerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewGobSerializer()
+		s := serializer.NewGobSerializer()
 		for i := 0; i < b.N; i++ {
-			_, err := serializer.Serialize(msg)
+			_, err := s.Serialize(msg)
 			require.NoError(b, err)
 		}
 	})
@@ -41,12 +41,12 @@ func Benchmark_GobSerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewGobSerializer()
+		s := serializer.NewGobSerializer()
 
 		var target item_models.Item
 		for i := 0; i < b.N; i++ {
-			bs, _ := serializer.Serialize(msg)
-			_ = serializer.Deserialize(bs, &target)
+			bs, _ := s.Serialize(msg)
+			_ = s.Deserialize(bs, &target)
 		}
 	})
 }
@@ -63,9 +63,9 @@ func Benchmark_ProtoGobSerializer(b *testing.B) {
 				ItemCode: "code-status",
 			},
 		}
-		serializer := go_serializer.NewGobSerializer()
+		s := serializer.NewGobSerializer()
 		for i := 0; i < b.N; i++ {
-			_, err := serializer.Serialize(msg)
+			_, err := s.Serialize(msg)
 			require.NoError(b, err)
 		}
 	})

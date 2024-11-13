@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
+	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 	"math"
 	"reflect"
 	"time"

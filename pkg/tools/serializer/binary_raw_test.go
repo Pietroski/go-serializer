@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	item_models "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/models/item"
+	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 )
 
 func TestRawBinarySerializer_Marshal(t *testing.T) {

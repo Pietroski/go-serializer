@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package item_error;
-option go_package = "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/protos/schemas/generated/go/pkg/item-error;grpc_item_error";
+option go_package = "gitlab.com/pietroski-software-company/devex/golang/serializer/protos/schemas/generated/go/pkg/item-error;grpc_item_error";
 
 message ItemError {
   string id = 1;

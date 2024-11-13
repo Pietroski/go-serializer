@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	go_serializer "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/serializer"
+	go_serializer "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/tools/serializer"
 )
 
 type FakeBeautifier struct {

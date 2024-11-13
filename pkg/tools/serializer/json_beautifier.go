@@ -2,8 +2,7 @@ package go_serializer
 
 import (
 	"encoding/json"
-
-	error_builder "gitlab.com/pietroski-software-company/tools/serializer/go-serializer/pkg/tools/builder/errors"
+	"fmt"
 )
 
 type (
@@ -21,7 +20,7 @@ func NewJsonBeautifier() Beautifier {
 func (b *jsonBeautifier) Beautify(payload interface{}, prefix string, indent string) ([]byte, error) {
 	bs, err := json.MarshalIndent(payload, prefix, indent)
 	if err != nil {
-		return []byte{}, error_builder.Err(EncodeErrMsg, err)
+		return []byte{}, fmt.Errorf(EncodeErrMsg, err)
 	}
 
 	return bs, err
@@ -38,11 +37,11 @@ func (b *jsonBeautifier) Deserialize(payload []byte, target interface{}) error {
 func (s *jsonBeautifier) DataRebind(payload interface{}, target interface{}) error {
 	bs, err := s.Serialize(payload)
 	if err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(RebinderErrMsg, err)
 	}
 
 	if err = s.Deserialize(bs, target); err != nil {
-		return error_builder.Err(RebinderErrMsg, err)
+		return fmt.Errorf(RebinderErrMsg, err)
 	}
 
 	return nil
