@@ -85,11 +85,18 @@ func (s *RawBinarySerializer) encode(data interface{}) []byte {
 func (s *RawBinarySerializer) reflectEncode(value reflect.Value) []byte {
 	bbw := bytesx.NewWriter(make([]byte, 1<<6))
 
-	//if s.serializeReflectPrimitive(bbw, &value) {
-	//	return bbw.Bytes()
-	//}
+	if s.serializeReflectPrimitive(bbw, &value) {
+		return bbw.Bytes()
+	}
 
 	if value.Kind() == reflect.Ptr {
+		if value.IsNil() {
+			bbw.Put(1)
+
+			return bbw.Bytes()
+		}
+
+		bbw.Put(0)
 		value = value.Elem()
 	}
 
@@ -149,12 +156,17 @@ func (s *RawBinarySerializer) reflectDecode(data []byte, value reflect.Value) in
 	bbr := bytesx.NewReader(data)
 
 	if value.Kind() == reflect.Ptr {
+		if bbr.Next() == 1 {
+			return bbr.Yield()
+		}
+
+		value.Set(reflect.New(value.Type().Elem()))
 		value = value.Elem()
 	}
 
-	//if s.deserializePrimitive(bbr, &value) {
-	//	return bbr.Yield()
-	//}
+	if s.deserializePrimitive(bbr, &value) {
+		return bbr.Yield()
+	}
 
 	if value.Kind() == reflect.Struct {
 		s.structDecode(bbr, &value)
@@ -236,12 +248,9 @@ func (s *RawBinarySerializer) serializePrimitive(bbw *bytesx.Writer, data interf
 		bbw.Write(bytesx.AddUint64(math.Float64bits(real(v))))
 		bbw.Write(bytesx.AddUint64(math.Float64bits(imag(v))))
 		return true
-	case uintptr:
-		bbw.Write(bytesx.AddUint64(uint64(v)))
-		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesx.Writer, v *reflect.Value) bool {
@@ -311,10 +320,11 @@ func (s *RawBinarySerializer) serializeReflectPrimitive(bbw *bytesx.Writer, v *r
 
 func (s *RawBinarySerializer) deserializePrimitive(bbr *bytesx.Reader, field *reflect.Value) bool {
 	switch field.Kind() {
-	case reflect.String:
-		field.SetString(s.decodeUnsafeString(bbr))
 	case reflect.Bool:
 		field.SetBool(bbr.Next() == 1)
+		return true
+	case reflect.String:
+		field.SetString(s.decodeUnsafeString(bbr))
 		return true
 	case reflect.Int:
 		field.SetInt(int64(bytesx.Uint64(bbr.Read(8))))
@@ -364,14 +374,9 @@ func (s *RawBinarySerializer) deserializePrimitive(bbr *bytesx.Reader, field *re
 			math.Float64frombits(bytesx.Uint64(bbr.Read(8))),
 		))
 		return true
-	case reflect.Uintptr:
-		field.SetInt(int64(bytesx.Uint64(bbr.Read(8))))
-		return true
 	default:
 		return false
 	}
-
-	return false
 }
 
 func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesx.Writer, data interface{}) bool {
@@ -475,12 +480,6 @@ func (s *RawBinarySerializer) serializePrimitiveSliceArray(bbw *bytesx.Writer, d
 		for _, n := range v {
 			bbw.Write(bytesx.AddUint64(math.Float64bits(real(n))))
 			bbw.Write(bytesx.AddUint64(math.Float64bits(imag(n))))
-		}
-
-		return true
-	case []uintptr:
-		for _, n := range v {
-			bbw.Write(bytesx.AddUint64(uint64(n)))
 		}
 
 		return true
@@ -603,12 +602,6 @@ func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
 		}
 
 		return true
-	case "[]uintptr":
-		for i := 0; i < length; i++ {
-			bbw.Write(bytesx.AddUint64(uint64(field.Index(i).Int())))
-		}
-
-		return true
 	case "[][]uint8":
 		for i := 0; i < length; i++ {
 			f := field.Index(i)
@@ -628,23 +621,15 @@ func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
 		}
 
 		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 	bbr *bytesx.Reader, field *reflect.Value, length int,
 ) bool {
 	switch field.Type().String() {
-	case "[]string":
-		ss := make([]string, length)
-		for i := range ss {
-			ss[i] = s.decodeUnsafeString(bbr)
-		}
-
-		field.Set(reflect.ValueOf(ss))
-		return true
 	case "[]bool":
 		bb := make([]bool, length)
 		for i := range bb {
@@ -652,6 +637,14 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		}
 
 		field.Set(reflect.ValueOf(bb))
+		return true
+	case "[]string":
+		ss := make([]string, length)
+		for i := range ss {
+			ss[i] = s.decodeUnsafeString(bbr)
+		}
+
+		field.Set(reflect.ValueOf(ss))
 		return true
 	case "[]int":
 		*(*[]int64)(unsafe.Pointer(field.UnsafeAddr())) =
@@ -711,9 +704,9 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 
 		field.Set(reflect.ValueOf(ii))
 		return true
+	default:
+		return false
 	}
-
-	return false
 }
 
 // ################################################################################################################## \\
@@ -883,6 +876,9 @@ func (s *RawBinarySerializer) sliceArrayDecode(bbr *bytesx.Reader, field *reflec
 			s.mapDecode(bbr, &f)
 			continue
 		}
+
+		// this is always a primitive
+		s.deserializePrimitive(bbr, &f)
 	}
 }
 
@@ -906,24 +902,10 @@ func (s *RawBinarySerializer) mapEncode(bbw *bytesx.Writer, field *reflect.Value
 		}
 
 		return
-	case map[int]interface{}:
-		for k, v := range rawFieldValue {
-			bbw.Write(bytesx.AddUint64(uint64(k)))
-			bbw.Write(s.encode(v))
-		}
-
-		return
 	case map[int64]int64:
 		for k, v := range rawFieldValue {
 			bbw.Write(bytesx.AddUint64(uint64(k)))
 			bbw.Write(bytesx.AddUint64(uint64(v)))
-		}
-
-		return
-	case map[int64]interface{}:
-		for k, v := range rawFieldValue {
-			bbw.Write(bytesx.AddUint64(uint64(k)))
-			bbw.Write(s.encode(v))
 		}
 
 		return
@@ -934,33 +916,49 @@ func (s *RawBinarySerializer) mapEncode(bbw *bytesx.Writer, field *reflect.Value
 		}
 
 		return
-	case map[string]interface{}:
-		for k, v := range rawFieldValue {
-			s.encodeUnsafeString(bbw, k)
-			bbw.Write(s.encode(v))
-		}
 
-		return
-	case map[interface{}]interface{}:
-		for k, v := range rawFieldValue {
-			bbw.Write(s.encode(k))
-			bbw.Write(s.encode(v))
-		}
+	// TODO: implement these map types
+	//case map[int]interface{}:
+	//	for k, v := range rawFieldValue {
+	//		bbw.Write(bytesx.AddUint64(uint64(k)))
+	//		bbw.Write(s.encode(v))
+	//	}
+	//
+	//	return
+	//case map[int64]interface{}:
+	//	for k, v := range rawFieldValue {
+	//		bbw.Write(bytesx.AddUint64(uint64(k)))
+	//		bbw.Write(s.encode(v))
+	//	}
+	//
+	//	return
+	//case map[string]interface{}:
+	//	for k, v := range rawFieldValue {
+	//		s.encodeUnsafeString(bbw, k)
+	//		bbw.Write(s.encode(v))
+	//	}
+	//
+	//	return
+	//case map[interface{}]interface{}:
+	//	for k, v := range rawFieldValue {
+	//		bbw.Write(s.encode(k))
+	//		bbw.Write(s.encode(v))
+	//	}
 	default:
 		for _, key := range field.MapKeys() {
 			// key
-			bbw.Write(s.encode(key.Interface()))
+			bbw.Write(s.reflectEncode(key))
 
 			// value type
 			value := field.MapIndex(key)
 			// value
-			bbw.Write(s.encode(value.Interface()))
+			bbw.Write(s.reflectEncode(value))
 		}
 	}
 }
 
 func (s *RawBinarySerializer) mapDecode(bbr *bytesx.Reader, field *reflect.Value) {
-	length := bytesx.Uint32(bbr.Read(4))
+	length := int(bytesx.Uint32(bbr.Read(4)))
 	if length == 0 {
 		return
 	}
@@ -968,70 +966,74 @@ func (s *RawBinarySerializer) mapDecode(bbr *bytesx.Reader, field *reflect.Value
 	switch field.Interface().(type) {
 	case map[int]int:
 		tmtd := make(map[int]int, length)
-		for i := uint32(0); i < length; i++ {
+		for i := 0; i < length; i++ {
 			tmtd[int(bytesx.Uint64(bbr.Read(8)))] = int(bytesx.Uint64(bbr.Read(8)))
-		}
-		field.Set(reflect.ValueOf(tmtd))
-		return
-	case map[int]interface{}:
-		tmtd := make(map[int]interface{}, length)
-		for i := uint32(0); i < length; i++ {
-			var itrfc interface{}
-			bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
-			tmtd[int(bytesx.Uint64(bbr.Read(8)))] = itrfc
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
 	case map[int64]int64:
 		tmtd := make(map[int64]int64, length)
-		for i := uint32(0); i < length; i++ {
+		for i := 0; i < length; i++ {
 			tmtd[int64(bytesx.Uint64(bbr.Read(8)))] = int64(bytesx.Uint64(bbr.Read(8)))
-		}
-		field.Set(reflect.ValueOf(tmtd))
-		return
-	case map[int64]interface{}:
-		tmtd := make(map[int64]interface{}, length)
-		for i := uint32(0); i < length; i++ {
-			var itrfc interface{}
-			bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
-			tmtd[int64(bytesx.Uint64(bbr.Read(8)))] = itrfc
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
 	case map[string]string:
 		tmtd := make(map[string]string, length)
-		for i := uint32(0); i < length; i++ {
+		for i := 0; i < length; i++ {
 			tmtd[s.decodeUnsafeString(bbr)] = s.decodeUnsafeString(bbr)
 		}
 		field.Set(reflect.ValueOf(tmtd))
 		return
-	case map[string]interface{}:
-		tmtd := make(map[string]interface{}, length)
-		for i := uint32(0); i < length; i++ {
-			var itrfc interface{}
-			bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
-			tmtd[s.decodeUnsafeString(bbr)] = itrfc
-		}
-		field.Set(reflect.ValueOf(tmtd))
-		return
-	case map[interface{}]interface{}:
-		tmtd := make(map[interface{}]interface{}, length)
-		for i := uint32(0); i < length; i++ {
-			var itrfcKey interface{}
-			bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfcKey))
-			var itrfcType interface{}
-			bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfcType))
-			tmtd[itrfcKey] = itrfcType
-		}
-		field.Set(reflect.ValueOf(tmtd))
-	default:
-		field.Set(reflect.MakeMapWithSize(field.Type(), int(length)))
-		mapKeys := field.MapKeys()
-		for _, mapKey := range mapKeys {
-			bbr.Skip(s.reflectDecode(bbr.BytesFromCursor(), mapKey))
 
-			mapValue := field.MapIndex(mapKey)
-			bbr.Skip(s.reflectDecode(bbr.BytesFromCursor(), mapValue))
+	// TODO: implement these map types
+	//case map[int]interface{}:
+	//	tmtd := make(map[int]interface{}, length)
+	//	for i := uint32(0); i < length; i++ {
+	//		var itrfc interface{}
+	//		bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
+	//		tmtd[int(bytesx.Uint64(bbr.Read(8)))] = itrfc
+	//	}
+	//	field.Set(reflect.ValueOf(tmtd))
+	//	return
+	//case map[int64]interface{}:
+	//	tmtd := make(map[int64]interface{}, length)
+	//	for i := uint32(0); i < length; i++ {
+	//		var itrfc interface{}
+	//		bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
+	//		tmtd[int64(bytesx.Uint64(bbr.Read(8)))] = itrfc
+	//	}
+	//	field.Set(reflect.ValueOf(tmtd))
+	//	return
+	//case map[string]interface{}:
+	//	tmtd := make(map[string]interface{}, length)
+	//	for i := uint32(0); i < length; i++ {
+	//		var itrfc interface{}
+	//		bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfc))
+	//		tmtd[s.decodeUnsafeString(bbr)] = itrfc
+	//	}
+	//	field.Set(reflect.ValueOf(tmtd))
+	//	return
+	//case map[interface{}]interface{}:
+	//	tmtd := make(map[interface{}]interface{}, length)
+	//	for i := uint32(0); i < length; i++ {
+	//		var itrfcKey interface{}
+	//		bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfcKey))
+	//		var itrfcType interface{}
+	//		bbr.Skip(s.decode(bbr.BytesFromCursor(), &itrfcType))
+	//		tmtd[itrfcKey] = itrfcType
+	//	}
+	//	field.Set(reflect.ValueOf(tmtd))
+	default:
+		field.Set(reflect.MakeMapWithSize(field.Type(), length))
+		for i := 0; i < length; i++ {
+			keyValue := reflect.New(field.Type().Key()).Elem()
+			bbr.Skip(s.reflectDecode(bbr.BytesFromCursor(), keyValue))
+
+			valueValue := reflect.New(field.Type().Elem()).Elem()
+			bbr.Skip(s.reflectDecode(bbr.BytesFromCursor(), valueValue))
+
+			field.SetMapIndex(keyValue, valueValue)
 		}
 	}
 }

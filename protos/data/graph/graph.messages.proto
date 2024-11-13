@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package graph;
-option go_package = "gitlab.com/pietroski-software-company/devex/golang/serializer/protos/schemas/generated/go/pkg/data/graph;grpc_graph";
-
-message Graph {
-  bytes key = 1;
-  bytes value = 2;
-}

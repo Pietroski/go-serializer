@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package item;
+option go_package = "gitlab.com/pietroski-software-company/devex/golang/serializer/internal/protos/schemas/generated/go/pkg/item;grpc_item";
+
+message SubItem {
+  int64 date = 1;
+  int64 amount = 2;
+  string itemCode = 3;
+}
+
+message Item {
+  string id = 1;
+  uint64  itemId = 2;
+  int64 number = 3;
+  SubItem subItem = 6;
+}
+
+message AnotherSubItem {
+  int64 date = 1;
+  int64 amount = 2;
+  string itemCode = 3;
+}
+
+message AnotherItem {
+  string id = 1;
+  uint64  itemId = 2;
+  int64 number = 3;
+  AnotherSubItem subItem = 6;
+}
+
+message SliceTestData {
+  repeated int64 int_list = 1;
+  repeated uint64 uint_list = 2;
+  repeated string str_list = 3;
+  repeated SliceItem struct_list = 4;
+  repeated SliceItem struct_nil_list = 5;
+  repeated bytes bytes_bytes_list = 6;
+  bytes bytes_list = 7;
+}
+
+message SliceItem {
+  int64 int = 1;
+  string str = 2;
+  bool bool = 3;
+}
+
+message MapTestData {
+  map<int64, int64> int64_key_map_int64_value = 1;
+  map<string, string> str_key_map_str_value = 2;
+}
+
+// #####################################################################################################################
+//
+// #####################################################################################################################
+
+message Int64SliceTestData {
+  repeated int64 int64_list = 1;
+}
+
+message Int32SliceTestData {
+  repeated int32 int32_list = 1;
+}
+
+message Uint64SliceTestData {
+  repeated uint64 uint64_list = 1;
+}
+
+message Uint32SliceTestData {
+  repeated uint32 uint32_list = 1;
+}
+
+message Float64SliceTestData {
+  repeated double float64_list = 1;
+}
+
+message Float32SliceTestData {
+  repeated float float32_list = 1;
+}
+
+message ByteSliceTestData {
+  bytes byte_list = 1;
+}
+
+message ByteByteSliceTestData {
+  repeated bytes byte_byte_list = 1;
+}
+
+message StringSliceTestData {
+  repeated string string_list = 1;
+}
+
+message StructSliceTestData {
+  repeated StructTestData struct_list = 1;
+}
+
+message StructTestData {
+  bool bool = 1;
+  string str = 2;
+  int64 int64 = 3;
+}
+
+message MapInt64Int64TestData {
+  map<int64, int64> map_int64_int64 = 1;
+}
+
+message MapStringStringTestData {
+  map<string, string> map_string_string = 1;
+}
+
+message MapInt64StructPointerTestData {
+  map<int64, StructTestData> map_int64_struct_pointer_test_data = 1;
+}
+
+message MapStringStructPointerTestData {
+  map<string, StructTestData> map_string_struct_pointer_test_data = 1;
+}
+
+message SimplifiedSpecialStructTestData {
+  bool bool = 1;
+  string str = 2;
+  int32 int32 = 3;
+  int64 int64 = 4;
+  uint32 uint32 = 5;
+  uint64 uint64 = 6;
+  float float32 = 7;
+  double float64 = 8;
+  bytes bytes = 9;
+  repeated bytes repeated_bytes = 10;
+}
+
+message SimplifiedSpecialStructPointerSliceTestData {
+  repeated SimplifiedSpecialStructTestData simplified_special_struct_test_data = 1;
+}
+
+message StringStruct {
+  string first_string = 1;
+  string second_string = 2;
+  string third_string = 3;
+  string fourth_string = 4;
+  string fifth_string = 5;
+}
+
+message Int64Struct {
+  int64 first_int64 = 1;
+  int64 second_int64 = 2;
+  int64 third_int64 = 3;
+  int64 fourth_int64 = 4;
+  int64 fifth_int64 = 5;
+  int64 sixth_int64 = 6;
+}

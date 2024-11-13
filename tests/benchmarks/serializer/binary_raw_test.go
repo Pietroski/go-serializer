@@ -589,7 +589,7 @@ func BenchmarkType_RawBinarySerializer(b *testing.B) {
 	})
 
 	b.Run("map serialization", func(b *testing.B) {
-		b.Run("map of int to int", func(b *testing.B) {
+		b.Run("map[int]int", func(b *testing.B) {
 			msg := &MapTestData{
 				Int64KeyMapInt64Value: map[int64]int64{
 					0:     100,
@@ -637,7 +637,7 @@ func BenchmarkType_RawBinarySerializer(b *testing.B) {
 			})
 		})
 
-		b.Run("map of string to string", func(b *testing.B) {
+		b.Run("map[string]string", func(b *testing.B) {
 			msg := MapTestData{
 				StrKeyMapStrValue: map[string]string{
 					"any-key":       "any-value",
@@ -669,6 +669,62 @@ func BenchmarkType_RawBinarySerializer(b *testing.B) {
 
 			b.Run("encoding - decoding", func(b *testing.B) {
 				var target MapTestData
+				bs, _ := s.Serialize(msg)
+				_ = s.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("map[string]StructTestData", func(b *testing.B) {
+			msg := testmodels.MapStringStructTestData{
+				MapStringStruct: map[string]testmodels.StructTestData{
+					"any-key": {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					"any-other-key": {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					"another-key": {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				},
+			}
+			s := serializer.NewRawBinarySerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = s.Serialize(msg)
+				}
+
+				var target testmodels.MapStringStructTestData
+				_ = s.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := s.Serialize(msg)
+
+				var target testmodels.MapStringStructTestData
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encoding - decoding", func(b *testing.B) {
+				var target testmodels.MapStringStructTestData
 				bs, _ := s.Serialize(msg)
 				_ = s.Deserialize(bs, &target)
 				b.Log(target)

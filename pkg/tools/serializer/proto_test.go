@@ -3,13 +3,13 @@
 package go_serializer
 
 import (
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 	"math"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
-	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
 	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 )
 

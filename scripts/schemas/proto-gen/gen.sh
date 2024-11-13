@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-MOD_NAME=gitlab.com/pietroski-software-company/devex/golang/serializer/protos/schemas/generated
-PROTO_PATH=protos
-OUTPUT_PATH=generated
+MOD_NAME=gitlab.com/pietroski-software-company/devex/golang/serializer/internal/protos/schemas/generated
+PROTO_PATH=internal/protos
+OUTPUT_PATH=internal/generated
 SWAGGER_PATH="$OUTPUT_PATH/swagger"
 
 declare -a proto_list=(

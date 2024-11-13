@@ -1,6 +1,7 @@
 package serializer
 
 import (
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 	"math"
 	"testing"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/pietroski-software-company/devex/golang/serializer"
-	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
 )
 
 func Benchmark_ProtoSerializer(b *testing.B) {

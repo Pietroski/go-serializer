@@ -3,6 +3,7 @@ package beautifier
 import (
 	"encoding/json"
 	"fmt"
+
 	"gitlab.com/pietroski-software-company/devex/golang/serializer"
 	"gitlab.com/pietroski-software-company/devex/golang/serializer/models"
 )

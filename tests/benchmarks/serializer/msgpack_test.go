@@ -1,6 +1,7 @@
 package serializer
 
 import (
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 	"math"
 	"testing"
 	"time"
@@ -8,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/pietroski-software-company/devex/golang/serializer"
-	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/testmodels"
 	item_models "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/models/item"
 )
 
@@ -443,6 +444,62 @@ func BenchmarkType_MsgPackSerializer(b *testing.B) {
 
 			b.Run("encoding - decoding", func(b *testing.B) {
 				var target MapTestData
+				bs, _ := s.Serialize(msg)
+				_ = s.Deserialize(bs, &target)
+				b.Log(target)
+
+				for i := 0; i < b.N; i++ {
+					bs, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+		})
+
+		b.Run("map[string]StructTestData", func(b *testing.B) {
+			msg := testmodels.MapStringStructTestData{
+				MapStringStruct: map[string]testmodels.StructTestData{
+					"any-key": {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					"any-other-key": {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					"another-key": {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				},
+			}
+			s := serializer.NewMsgPackSerializer()
+
+			b.Run("encoding", func(b *testing.B) {
+				var bs []byte
+				for i := 0; i < b.N; i++ {
+					bs, _ = s.Serialize(msg)
+				}
+
+				var target testmodels.MapStringStructTestData
+				_ = s.Deserialize(bs, &target)
+				b.Log(target)
+			})
+
+			b.Run("decoding", func(b *testing.B) {
+				bs, _ := s.Serialize(msg)
+
+				var target testmodels.MapStringStructTestData
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
+				b.Log(target)
+			})
+
+			b.Run("encoding - decoding", func(b *testing.B) {
+				var target testmodels.MapStringStructTestData
 				bs, _ := s.Serialize(msg)
 				_ = s.Deserialize(bs, &target)
 				b.Log(target)

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
 
-	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/generated/go/pkg/item"
 	go_serializer "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/tools/serializer"
 )
 
