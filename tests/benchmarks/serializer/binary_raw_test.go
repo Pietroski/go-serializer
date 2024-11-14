@@ -1,17 +1,14 @@
 package serializer
 
 import (
-	"fmt"
 	"math"
 	"testing"
 	"time"
-	"unsafe"
 
 	"github.com/stretchr/testify/require"
 
 	"gitlab.com/pietroski-software-company/devex/golang/serializer"
 	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/testmodels"
-	go_serializer "gitlab.com/pietroski-software-company/devex/golang/serializer/pkg/tools/serializer"
 )
 
 func Benchmark_RawBinarySerializer(b *testing.B) {
@@ -735,59 +732,5 @@ func BenchmarkType_RawBinarySerializer(b *testing.B) {
 				}
 			})
 		})
-	})
-}
-
-func Benchmark_Operation(b *testing.B) {
-	b.Run("", func(b *testing.B) {
-		var abs [8]byte
-		i64 := int64(100)
-
-		var i64Value int64
-		for i := 0; i < b.N; i++ {
-			*(*int64)(unsafe.Pointer(&abs)) = i64
-			i64Value = *(*int64)(unsafe.Pointer(&abs[0]))
-		}
-
-		fmt.Println(i64Value)
-	})
-
-	b.Run("", func(b *testing.B) {
-		bs := make([]byte, 8)
-		i64 := int64(100)
-
-		var i64Value int64
-		for i := 0; i < b.N; i++ {
-			go_serializer.PutUint64(bs, uint64(i64))
-			i64Value = int64(go_serializer.Uint64(bs))
-		}
-
-		fmt.Println(i64Value)
-	})
-
-	b.Run("", func(b *testing.B) {
-		var abs [8]byte
-		i64 := uint64(100)
-
-		var i64Value uint64
-		for i := 0; i < b.N; i++ {
-			*(*uint64)(unsafe.Pointer(&abs)) = i64
-			i64Value = *(*uint64)(unsafe.Pointer(&abs[0]))
-		}
-
-		fmt.Println(i64Value)
-	})
-
-	b.Run("", func(b *testing.B) {
-		bs := make([]byte, 8)
-		i64 := uint64(100)
-
-		var i64Value uint64
-		for i := 0; i < b.N; i++ {
-			go_serializer.PutUint64(bs, i64)
-			i64Value = go_serializer.Uint64(bs)
-		}
-
-		fmt.Println(i64Value)
 	})
 }

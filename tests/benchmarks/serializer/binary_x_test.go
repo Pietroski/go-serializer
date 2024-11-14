@@ -1,13 +1,13 @@
 package serializer
 
 import (
-	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/testmodels"
 	"math"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/testmodels"
 	"gitlab.com/pietroski-software-company/devex/golang/serializer/serializerx"
 )
 

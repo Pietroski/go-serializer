@@ -262,7 +262,7 @@ func BenchmarkBinarySerializer(b *testing.B) {
 		})
 
 		b.Run("string struct only", func(b *testing.B) {
-			msg := &testmodels.StringsStruct{
+			msg := &testmodels.StringStruct{
 				FirstString:  "first string value",
 				SecondString: "second string value",
 				ThirdString:  "third string value",
@@ -286,7 +286,7 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				bs, err := s.Serialize(msg)
 				require.NoError(b, err)
 
-				var target testmodels.StringsStruct
+				var target testmodels.StringStruct
 				for i := 0; i < b.N; i++ {
 					err = s.Deserialize(bs, &target)
 				}
@@ -296,7 +296,7 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			b.Run("encoding - decoding", func(b *testing.B) {
 				s := serializer.NewBinarySerializer()
 
-				var target testmodels.StringsStruct
+				var target testmodels.StringStruct
 				for i := 0; i < b.N; i++ {
 					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
