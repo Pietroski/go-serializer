@@ -69,6 +69,47 @@ func TestProtoSerializer(t *testing.T) {
 			t.Log(target.SubItem)
 		})
 
+		t.Run("simplified special struct test data", func(t *testing.T) {
+			msg := &grpc_item.SimplifiedSpecialStructTestData{
+				Bool:    true,
+				Str:     "any-string",
+				Int32:   math.MaxInt32,
+				Int64:   math.MaxInt64,
+				Uint32:  math.MaxUint32,
+				Uint64:  math.MaxUint64,
+				Float32: math.MaxFloat32,
+				Float64: math.MaxFloat64,
+				Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+				RepeatedBytes: [][]byte{
+					{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+					{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+					{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+				},
+			}
+
+			s := NewProtoSerializer()
+
+			bs, err := s.Serialize(msg)
+			assert.NoError(t, err)
+			assert.NotNil(t, bs)
+
+			var target grpc_item.SimplifiedSpecialStructTestData
+			err = s.Deserialize(bs, &target)
+			assert.NoError(t, err)
+			//assert.Equal(t, *msg, target)
+			assert.Equal(t, msg.Bool, target.Bool)
+			assert.Equal(t, msg.Str, target.Str)
+			assert.Equal(t, msg.Int32, target.Int32)
+			assert.Equal(t, msg.Int64, target.Int64)
+			assert.Equal(t, msg.Uint32, target.Uint32)
+			assert.Equal(t, msg.Uint64, target.Uint64)
+			assert.Equal(t, msg.Float32, target.Float32)
+			assert.Equal(t, msg.Float64, target.Float64)
+			assert.Equal(t, msg.Bytes, target.Bytes)
+			assert.Equal(t, msg.RepeatedBytes, target.RepeatedBytes)
+			t.Log(target)
+		})
+
 		t.Run("string struct only", func(t *testing.T) {
 			msg := &grpc_item.StringStruct{
 				FirstString:  "first string value",
@@ -113,6 +154,32 @@ func TestProtoSerializer(t *testing.T) {
 
 			var target grpc_item.Int64Struct
 			err = s.Deserialize(bs, &target)
+			assert.NoError(t, err)
+			assert.Equal(t, msg.FirstInt64, target.FirstInt64)
+			assert.Equal(t, msg.SecondInt64, target.SecondInt64)
+			assert.Equal(t, msg.ThirdInt64, target.ThirdInt64)
+			assert.Equal(t, msg.FourthInt64, target.FourthInt64)
+			assert.Equal(t, msg.FifthInt64, target.FifthInt64)
+			assert.Equal(t, msg.SixthInt64, target.SixthInt64)
+			t.Log(target)
+		})
+
+		t.Run("int64 struct only - data rebind", func(t *testing.T) {
+			msg := &grpc_item.Int64Struct{
+				FirstInt64:  math.MaxInt64,
+				SecondInt64: -math.MaxInt64,
+				ThirdInt64:  math.MaxInt64,
+				FourthInt64: -math.MaxInt64,
+				FifthInt64:  0,
+				SixthInt64:  -0,
+			}
+
+			s := NewProtoSerializer()
+
+			var target grpc_item.Int64Struct
+			err := s.DataRebind(msg, &target)
+			assert.NoError(t, err)
+
 			assert.NoError(t, err)
 			assert.Equal(t, msg.FirstInt64, target.FirstInt64)
 			assert.Equal(t, msg.SecondInt64, target.SecondInt64)
@@ -277,6 +344,53 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			t.Log(target)
 		})
+
+		t.Run("[]*SimplifiedSpecialStructTestData", func(t *testing.T) {
+			msg := &grpc_item.SimplifiedSpecialStructPointerSliceTestData{
+				SimplifiedSpecialStructTestData: []*grpc_item.SimplifiedSpecialStructTestData{
+					{
+						Bool:    true,
+						Str:     "any-string",
+						Int32:   math.MaxInt32,
+						Int64:   math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: math.MaxFloat32,
+						Float64: math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+					{
+						Bool:    false,
+						Str:     "any-other-string",
+						Int32:   -math.MaxInt32,
+						Int64:   -math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: -math.MaxFloat32,
+						Float64: -math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+				},
+			}
+			serializer := NewProtoSerializer()
+
+			var target grpc_item.SimplifiedSpecialStructPointerSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
 	})
 
 	t.Run("map", func(t *testing.T) {
@@ -331,7 +445,7 @@ func TestProtoSerializer(t *testing.T) {
 			t.Log(target)
 		})
 
-		t.Run("map[int64]MapInt64StructPointerTestData", func(t *testing.T) {
+		t.Run("map[int64]*grpc_item.StructTestData", func(t *testing.T) {
 			msg := &grpc_item.MapInt64StructPointerTestData{
 				MapInt64StructPointerTestData: map[int64]*grpc_item.StructTestData{
 					0: {
@@ -374,7 +488,7 @@ func TestProtoSerializer(t *testing.T) {
 			t.Log(target)
 		})
 
-		t.Run("map[string]MapStringStructPointerTestData", func(t *testing.T) {
+		t.Run("map[string]*grpc_item.StructTestData", func(t *testing.T) {
 			msg := &grpc_item.MapStringStructPointerTestData{
 				MapStringStructPointerTestData: map[string]*grpc_item.StructTestData{
 					"any-key": {

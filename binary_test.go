@@ -635,6 +635,37 @@ func TestBinarySerializer(t *testing.T) {
 			t.Log(target.SubItem)
 		})
 
+		t.Run("simplified special struct test data", func(t *testing.T) {
+			msg := &testmodels.SimplifiedSpecialStructTestData{
+				Bool:    true,
+				String:  "any-string",
+				Int32:   math.MaxInt32,
+				Int64:   math.MaxInt64,
+				Uint32:  math.MaxUint32,
+				Uint64:  math.MaxUint64,
+				Float32: math.MaxFloat32,
+				Float64: math.MaxFloat64,
+				Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+				RepeatedBytes: [][]byte{
+					{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+					{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+					{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+				},
+			}
+
+			s := NewBinarySerializer()
+
+			bs, err := s.Serialize(msg)
+			assert.NoError(t, err)
+			assert.NotNil(t, bs)
+
+			var target testmodels.SimplifiedSpecialStructTestData
+			err = s.Deserialize(bs, &target)
+			assert.NoError(t, err)
+			assert.Equal(t, *msg, target)
+			t.Log(target)
+		})
+
 		t.Run("string struct only", func(t *testing.T) {
 			msg := &testmodels.StringStruct{
 				FirstString:  "first string value",
@@ -962,6 +993,100 @@ func TestBinarySerializer(t *testing.T) {
 			t.Log(target)
 		})
 
+		t.Run("[]SimplifiedSpecialStructTestData", func(t *testing.T) {
+			msg := &testmodels.SimplifiedSpecialStructSliceTestData{
+				SimplifiedSpecialStructSliceTestData: []testmodels.SimplifiedSpecialStructTestData{
+					{
+						Bool:    true,
+						String:  "any-string",
+						Int32:   math.MaxInt32,
+						Int64:   math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: math.MaxFloat32,
+						Float64: math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+					{
+						Bool:    false,
+						String:  "any-other-string",
+						Int32:   -math.MaxInt32,
+						Int64:   -math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: -math.MaxFloat32,
+						Float64: -math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+				},
+			}
+			serializer := NewBinarySerializer()
+
+			var target testmodels.SimplifiedSpecialStructSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
+
+		t.Run("[]*SimplifiedSpecialStructTestData", func(t *testing.T) {
+			msg := &testmodels.SimplifiedSpecialStructPointerSliceTestData{
+				SimplifiedSpecialStructPointerSliceTestData: []*testmodels.SimplifiedSpecialStructTestData{
+					{
+						Bool:    true,
+						String:  "any-string",
+						Int32:   math.MaxInt32,
+						Int64:   math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: math.MaxFloat32,
+						Float64: math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+					{
+						Bool:    false,
+						String:  "any-other-string",
+						Int32:   -math.MaxInt32,
+						Int64:   -math.MaxInt64,
+						Uint32:  math.MaxUint32,
+						Uint64:  math.MaxUint64,
+						Float32: -math.MaxFloat32,
+						Float64: -math.MaxFloat64,
+						Bytes:   []byte{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+						RepeatedBytes: [][]byte{
+							{-0, 0, 255, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, math.MaxUint8},
+							{math.MaxUint8, math.MaxInt8, 255, 0, -0},
+						},
+					},
+				},
+			}
+			serializer := NewBinarySerializer()
+
+			var target testmodels.SimplifiedSpecialStructPointerSliceTestData
+			bs, err := serializer.Serialize(msg)
+			require.NoError(t, err)
+			err = serializer.Deserialize(bs, &target)
+			require.NoError(t, err)
+			t.Log(target)
+		})
+
 		t.Run("various types together", func(t *testing.T) {
 			msg := &testmodels.ProtoTypeSliceTestData{
 				IntList: []int64{
@@ -1253,6 +1378,74 @@ func TestBinarySerializer(t *testing.T) {
 			t.Log(target)
 		})
 
+		t.Run("map[int64]MapInt64StructTestData", func(t *testing.T) {
+			msg := testmodels.MapInt64StructTestData{
+				MapInt64Struct: map[int64]testmodels.StructTestData{
+					0: {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					2: {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					4: {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				},
+			}
+
+			s := NewBinarySerializer()
+
+			bs, err := s.Serialize(msg)
+			assert.NoError(t, err)
+			assert.NotNil(t, bs)
+
+			var target testmodels.MapInt64StructTestData
+			err = s.Deserialize(bs, &target)
+			assert.NoError(t, err)
+			assert.Equal(t, msg, target)
+			t.Log(target)
+		})
+
+		t.Run("map[int64]MapInt64StructPointerTestData", func(t *testing.T) {
+			msg := testmodels.MapInt64StructPointerTestData{
+				MapInt64StructPointer: map[int64]*testmodels.StructTestData{
+					0: {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					2: {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					4: {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				},
+			}
+
+			s := NewBinarySerializer()
+
+			bs, err := s.Serialize(msg)
+			assert.NoError(t, err)
+			assert.NotNil(t, bs)
+
+			var target testmodels.MapInt64StructPointerTestData
+			err = s.Deserialize(bs, &target)
+			assert.NoError(t, err)
+			assert.Equal(t, msg, target)
+			t.Log(target)
+		})
+
 		t.Run("map[string]StructTestData", func(t *testing.T) {
 			msg := testmodels.MapStringStructTestData{
 				MapStringStruct: map[string]testmodels.StructTestData{
@@ -1454,6 +1647,70 @@ func TestBinarySerializer(t *testing.T) {
 				assert.NotNil(t, bs)
 
 				var target map[int]*testmodels.StructTestData
+				err = s.Deserialize(bs, &target)
+				assert.NoError(t, err)
+				assert.Equal(t, msg, target)
+				t.Log(target)
+			})
+
+			t.Run("map[int64]StructTestData", func(t *testing.T) {
+				msg := map[int64]testmodels.StructTestData{
+					0: {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					2: {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					4: {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				}
+
+				s := NewBinarySerializer()
+
+				bs, err := s.Serialize(msg)
+				assert.NoError(t, err)
+				assert.NotNil(t, bs)
+
+				var target map[int64]testmodels.StructTestData
+				err = s.Deserialize(bs, &target)
+				assert.NoError(t, err)
+				assert.Equal(t, msg, target)
+				t.Log(target)
+			})
+
+			t.Run("map[int64]StructPointerTestData", func(t *testing.T) {
+				msg := map[int64]*testmodels.StructTestData{
+					0: {
+						Bool:   true,
+						String: "any-string",
+						Int64:  math.MaxInt64,
+					},
+					2: {
+						Bool:   false,
+						String: "any-other-string",
+						Int64:  -math.MaxInt64,
+					},
+					4: {
+						Bool:   false,
+						String: "",
+						Int64:  0,
+					},
+				}
+
+				s := NewBinarySerializer()
+
+				bs, err := s.Serialize(msg)
+				assert.NoError(t, err)
+				assert.NotNil(t, bs)
+
+				var target map[int64]*testmodels.StructTestData
 				err = s.Deserialize(bs, &target)
 				assert.NoError(t, err)
 				assert.Equal(t, msg, target)
