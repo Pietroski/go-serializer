@@ -3,7 +3,6 @@ module gitlab.com/pietroski-software-company/devex/golang/serializer
 go 1.23
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.10.0
 	github.com/stretchr/testify v1.9.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1

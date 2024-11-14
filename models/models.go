@@ -12,8 +12,8 @@ const (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 //counterfeiter:generate -o ../../../fakes/fake_serializer.go . Serializer
 //counterfeiter:generate -o ../../../fakes/fake_beautifier.go . Beautifier
-//go:generate mockgen -package mocks -destination ../../../mocks/mocked_serializer.go . Serializer
-//go:generate mockgen -package mocks -destination ../../../mocks/mocked_beautifier.go . Beautifier
+//go:generate mockgen -package fakes -destination ../fakes/fake_serializer.go . Serializer
+//go:generate mockgen -package fakes -destination ../fakes/fake_beautifier.go . Beautifier
 
 type (
 	Serializer interface {
