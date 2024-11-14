@@ -20,7 +20,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.23.0-alpine3.20",
+      "image": "golang:1.23.3-alpine3.20",
       "name": "test-non-main",
       "when": {
         "branch": {
@@ -51,7 +51,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.23.0-alpine3.20",
+      "image": "golang:1.23.3-alpine3.20",
       "name": "test-main",
       "when": {
         "branch": [
@@ -68,7 +68,7 @@
         "echo -e \"machine gitlab.com\nlogin $${GITLAB_USERNAME}\npassword $${GITLAB_ACCESS_TOKEN}\" > ~/.netrc",
         "chmod 640 ~/.netrc",
         "git checkout -b release/merging-branch",
-        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer.git",
+        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer",
         "git push gitlab release/merging-branch -f"
       ],
       "environment": {
@@ -79,7 +79,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.23.0-alpine3.20",
+      "image": "golang:1.23.3-alpine3.20",
       "name": "gitlab-push",
       "when": {
         "branch": [
@@ -108,7 +108,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.23.0-alpine3.20",
+      "image": "golang:1.23.3-alpine3.20",
       "name": "test-tag",
       "when": {
         "branch": [
@@ -124,7 +124,7 @@
         "apk update && apk upgrade && apk add git bash make build-base",
         "echo -e \"machine gitlab.com\nlogin $${GITLAB_USERNAME}\npassword $${GITLAB_ACCESS_TOKEN}\" > ~/.netrc",
         "chmod 640 ~/.netrc",
-        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer.git",
+        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer",
         "make tag",
         "git push gitlab --tags"
       ],
@@ -136,7 +136,7 @@
           "from_secret": "GITLAB_USERNAME"
         }
       },
-      "image": "golang:1.23.0-alpine3.20",
+      "image": "golang:1.23.3-alpine3.20",
       "name": "gitlab-tag",
       "when": {
         "branch": [

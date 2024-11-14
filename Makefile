@@ -60,6 +60,9 @@ mock-generate:
 
 ########################################################################################################################
 
+tag-delete-all:
+	git tag | xargs git tag -d
+
 pull-latest:
 	git pull gitea main
 
