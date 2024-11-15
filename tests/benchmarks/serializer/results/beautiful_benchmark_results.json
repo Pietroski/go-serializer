@@ -1,0 +1,478 @@
+{
+  "benchmarks": {
+    "proto": {
+      "data_type": {
+        "struct": [
+          {
+            "case_name": "item sample",
+            "test_results": {
+              "encoding": {
+                "ops_count": 9089559,
+                "avg_op_time": "113.4 ns/op",
+                "alloc_size": "48 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 7738885,
+                "avg_op_time": "152.7 ns/op",
+                "alloc_size": "104 B/op",
+                "allocs": "3 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 4379649,
+                "avg_op_time": "274.0 ns/op",
+                "alloc_size": "152 B/op",
+                "allocs": "4 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "item sample - nil sub item",
+            "test_results": {
+              "encoding": {
+                "ops_count": 16566394,
+                "avg_op_time": "73.89 ns/op",
+                "alloc_size": "24 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 17472186,
+                "avg_op_time": "67.98 ns/op",
+                "alloc_size": "8 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 8472748,
+                "avg_op_time": "142.6 ns/op",
+                "alloc_size": "32 B/op",
+                "allocs": "2 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "simplified special struct test data",
+            "test_results": {
+              "encoding": {
+                "ops_count": 7987069,
+                "avg_op_time": "156.2 ns/op",
+                "alloc_size": "96 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 4062687,
+                "avg_op_time": "291.8 ns/op",
+                "alloc_size": "216 B/op",
+                "allocs": "8 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 2637134,
+                "avg_op_time": "455.8 ns/op",
+                "alloc_size": "312 B/op",
+                "allocs": "9 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "string struct only",
+            "test_results": {
+              "encoding": {
+                "ops_count": 11813726,
+                "avg_op_time": "100.5 ns/op",
+                "alloc_size": "112 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 7849570,
+                "avg_op_time": "162.6 ns/op",
+                "alloc_size": "120 B/op",
+                "allocs": "5 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 4563016,
+                "avg_op_time": "264.6 ns/op",
+                "alloc_size": "232 B/op",
+                "allocs": "6 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "int64 struct only",
+            "test_results": {
+              "encoding": {
+                "ops_count": 14184355,
+                "avg_op_time": "84.44 ns/op",
+                "alloc_size": "48 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 17910202,
+                "avg_op_time": "67.93 ns/op",
+                "alloc_size": "0 B/op",
+                "allocs": "0 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 7774144,
+                "avg_op_time": "153.8 ns/op",
+                "alloc_size": "48 B/op",
+                "allocs": "1 allocs/op"
+              }
+            }
+          }
+        ],
+        "slice": [
+          {
+            "case_name": "[]int64",
+            "test_results": {
+              "encoding": {
+                "ops_count": 12045270,
+                "avg_op_time": "100.2 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 10218799,
+                "avg_op_time": "119.5 ns/op",
+                "alloc_size": "112 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 5341918,
+                "avg_op_time": "223.0 ns/op",
+                "alloc_size": "176 B/op",
+                "allocs": "2 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "[]uint64",
+            "test_results": {
+              "encoding": {
+                "ops_count": 12068841,
+                "avg_op_time": "100.5 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 10022692,
+                "avg_op_time": "118.0 ns/op",
+                "alloc_size": "112 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 5346493,
+                "avg_op_time": "223.0 ns/op",
+                "alloc_size": "176 B/op",
+                "allocs": "2 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "[]string",
+            "test_results": {
+              "encoding": {
+                "ops_count": 14931616,
+                "avg_op_time": "81.07 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 5464425,
+                "avg_op_time": "199.8 ns/op",
+                "alloc_size": "176 B/op",
+                "allocs": "7 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 4156489,
+                "avg_op_time": "287.5 ns/op",
+                "alloc_size": "240 B/op",
+                "allocs": "8 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "[]byte",
+            "test_results": {
+              "encoding": {
+                "ops_count": 28069983,
+                "avg_op_time": "43.14 ns/op",
+                "alloc_size": "16 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 21603974,
+                "avg_op_time": "55.05 ns/op",
+                "alloc_size": "16 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 11794152,
+                "avg_op_time": "101.4 ns/op",
+                "alloc_size": "32 B/op",
+                "allocs": "2 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "[][]byte",
+            "test_results": {
+              "encoding": {
+                "ops_count": 16499371,
+                "avg_op_time": "72.18 ns/op",
+                "alloc_size": "80 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 3949396,
+                "avg_op_time": "305.8 ns/op",
+                "alloc_size": "440 B/op",
+                "allocs": "9 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 3092402,
+                "avg_op_time": "387.0 ns/op",
+                "alloc_size": "520 B/op",
+                "allocs": "10 allocs/op"
+              }
+            }
+          }
+        ],
+        "map": [
+          {
+            "case_name": "map[string]string",
+            "test_results": {
+              "encoding": {
+                "ops_count": 1841286,
+                "avg_op_time": "657.5 ns/op",
+                "alloc_size": "288 B/op",
+                "allocs": "13 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 1771293,
+                "avg_op_time": "676.8 ns/op",
+                "alloc_size": "608 B/op",
+                "allocs": "20 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 870684,
+                "avg_op_time": "1367 ns/op",
+                "alloc_size": "896 B/op",
+                "allocs": "33 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "map[int64]int64",
+            "test_results": {
+              "encoding": {
+                "ops_count": 976479,
+                "avg_op_time": "1198 ns/op",
+                "alloc_size": "432 B/op",
+                "allocs": "41 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 788588,
+                "avg_op_time": "1453 ns/op",
+                "alloc_size": "708 B/op",
+                "allocs": "31 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 433254,
+                "avg_op_time": "2758 ns/op",
+                "alloc_size": "1140 B/op",
+                "allocs": "72 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "map[int64]*grpc_item.StructTestData",
+            "test_results": {
+              "encoding": {},
+              "decoding": {},
+              "data_rebind": {}
+            }
+          },
+          {
+            "case_name": "map[string]*grpc_item.StructTestData",
+            "test_results": {
+              "encoding": {},
+              "decoding": {},
+              "data_rebind": {}
+            }
+          }
+        ]
+      },
+      "extra_cases": {}
+    },
+    "binary": {
+      "data_type": {
+        "struct": [
+          {
+            "case_name": "item sample",
+            "test_results": {
+              "encoding": {
+                "ops_count": 12303285,
+                "avg_op_time": "97.70 ns/op",
+                "alloc_size": "128 B/op",
+                "allocs": "2 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 10719932,
+                "avg_op_time": "111.5 ns/op",
+                "alloc_size": "56 B/op",
+                "allocs": "3 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 5338694,
+                "avg_op_time": "223.7 ns/op",
+                "alloc_size": "184 B/op",
+                "allocs": "5 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "item sample - nil sub item",
+            "test_results": {
+              "encoding": {
+                "ops_count": 24238526,
+                "avg_op_time": "49.58 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 30724194,
+                "avg_op_time": "38.99 ns/op",
+                "alloc_size": "8 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 13109481,
+                "avg_op_time": "93.04 ns/op",
+                "alloc_size": "72 B/op",
+                "allocs": "2 allocs/op"
+              }
+            }
+          }
+        ]
+      },
+      "extra_cases": {}
+    },
+    "raw_binary": {
+      "data_type": {
+        "struct": [
+          {
+            "case_name": "item sample",
+            "test_results": {
+              "encoding": {
+                "ops_count": 12383383,
+                "avg_op_time": "96.91 ns/op",
+                "alloc_size": "128 B/op",
+                "allocs": "2 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 13358466,
+                "avg_op_time": "86.90 ns/op",
+                "alloc_size": "32 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 6153348,
+                "avg_op_time": "195.3 ns/op",
+                "alloc_size": "160 B/op",
+                "allocs": "3 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "item sample - nil sub item",
+            "test_results": {
+              "encoding": {
+                "ops_count": 23474580,
+                "avg_op_time": "49.62 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 42175062,
+                "avg_op_time": "28.91 ns/op",
+                "alloc_size": "0 B/op",
+                "allocs": "0 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 14904069,
+                "avg_op_time": "81.02 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              }
+            }
+          }
+        ]
+      },
+      "extra_cases": {}
+    },
+    "x_binary": {
+      "data_type": {
+        "struct": [
+          {
+            "case_name": "item sample",
+            "test_results": {
+              "encoding": {
+                "ops_count": 12149836,
+                "avg_op_time": "98.18 ns/op",
+                "alloc_size": "128 B/op",
+                "allocs": "2 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 13536651,
+                "avg_op_time": "87.93 ns/op",
+                "alloc_size": "32 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 6005070,
+                "avg_op_time": "200.2 ns/op",
+                "alloc_size": "160 B/op",
+                "allocs": "3 allocs/op"
+              }
+            }
+          },
+          {
+            "case_name": "item sample - nil sub item",
+            "test_results": {
+              "encoding": {
+                "ops_count": 23975125,
+                "avg_op_time": "49.87 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              },
+              "decoding": {
+                "ops_count": 40352862,
+                "avg_op_time": "29.84 ns/op",
+                "alloc_size": "0 B/op",
+                "allocs": "0 allocs/op"
+              },
+              "data_rebind": {
+                "ops_count": 14542075,
+                "avg_op_time": "80.64 ns/op",
+                "alloc_size": "64 B/op",
+                "allocs": "1 allocs/op"
+              }
+            }
+          }
+        ]
+      },
+      "extra_cases": {}
+    },
+    "msgpack": {
+      "data_type": {},
+      "extra_cases": {}
+    },
+    "json": {
+      "data_type": {},
+      "extra_cases": {}
+    },
+    "gob": {
+      "data_type": {},
+      "extra_cases": {}
+    }
+  }
+}

@@ -13,7 +13,7 @@ import (
 
 func BenchmarkProtoSerializer(b *testing.B) {
 	b.Run("struct", func(b *testing.B) {
-		b.Run("default", func(b *testing.B) {
+		b.Run("item sample", func(b *testing.B) {
 			msg := &grpc_item.Item{
 				Id:     "any-item",
 				ItemId: 100,
@@ -25,93 +25,75 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				},
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.Item
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
+					_ = s.Deserialize(bs, &target)
 				}
-				require.NoError(b, err)
-
-				b.Log(target)
-				b.Log(target.SubItem)
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
-				b.Log(target.SubItem)
 			})
+
+			b.Log()
+			b.Log(target)
+			b.Log(target.SubItem)
 		})
 
-		b.Run("default benchmark - nil sub item", func(b *testing.B) {
+		b.Run("item sample - nil sub item", func(b *testing.B) {
 			msg := &grpc_item.Item{
 				Id:     "any-item",
 				ItemId: 100,
 				Number: 5_000_000_000,
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.Item
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					_, err = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
+					_ = s.Deserialize(bs, &target)
 				}
-				require.NoError(b, err)
-
-				b.Log(target)
-				b.Log(target.SubItem)
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
-				b.Log(target.SubItem)
 			})
+
+			b.Log()
+			b.Log(target)
+			b.Log(target.SubItem)
 		})
 
 		b.Run("simplified special struct test data", func(b *testing.B) {
@@ -132,43 +114,35 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				},
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.SimplifiedSpecialStructTestData
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
+					_ = s.Deserialize(bs, &target)
 				}
-				require.NoError(b, err)
-
-				b.Log(target)
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
 			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("string struct only", func(b *testing.B) {
@@ -180,43 +154,35 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				FifthString:  "fifth string value",
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.StringStruct
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
+					_ = s.Deserialize(bs, &target)
 				}
-				require.NoError(b, err)
-
-				b.Log(target)
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
 			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("int64 struct only", func(b *testing.B) {
@@ -229,43 +195,35 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				SixthInt64:  -0,
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.Int64Struct
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
+					_ = s.Deserialize(bs, &target)
 				}
-				require.NoError(b, err)
-
-				b.Log(target)
 			})
 
 			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Item
 				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
 			})
+
+			b.Log()
+			b.Log(target)
 		})
 	})
 
@@ -278,46 +236,35 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				},
 			}
 
+			s := serializer.NewProtoSerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target grpc_item.Int64SliceTestData
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
+
 			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var bs []byte
 				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-
-				var target grpc_item.Int64SliceTestData
-				_ = s.Deserialize(bs, &target)
-				b.Log(target)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				bs, _ := s.Serialize(msg)
-
-				var target grpc_item.Int64SliceTestData
 				for i := 0; i < b.N; i++ {
 					_ = s.Deserialize(bs, &target)
 				}
-				b.Log(target)
 			})
 
-			b.Run("encode - decode", func(b *testing.B) {
-				s := serializer.NewProtoSerializer()
-
-				var target grpc_item.Int64SliceTestData
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				err = s.Deserialize(bs, &target)
-				require.NoError(b, err)
-				b.Log(target)
-
+			b.Run("encoding - decoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("[]uint64", func(b *testing.B) {
@@ -518,7 +465,7 @@ func BenchmarkProtoSerializer(b *testing.B) {
 		})
 
 		b.Run("extra cases", func(b *testing.B) {
-			b.Run("[]]int64", func(b *testing.B) {
+			b.Run("[]int64", func(b *testing.B) {
 				msg := &grpc_item.SliceTestData{
 					Int64List: []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 				}
@@ -565,7 +512,7 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				})
 			})
 
-			b.Run("[]]uint64", func(b *testing.B) {
+			b.Run("[]uint64", func(b *testing.B) {
 				msg := &grpc_item.SliceTestData{
 					Uint64List: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 				}
@@ -612,7 +559,7 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				})
 			})
 
-			b.Run("[]]string", func(b *testing.B) {
+			b.Run("[]string", func(b *testing.B) {
 				msg := &grpc_item.SliceTestData{
 					StringList: []string{"first-item", "second-item", "third-item", "fourth-item"},
 				}
@@ -659,7 +606,7 @@ func BenchmarkProtoSerializer(b *testing.B) {
 				})
 			})
 
-			b.Run("[][]]bytes", func(b *testing.B) {
+			b.Run("[][]bytes", func(b *testing.B) {
 				msg := &grpc_item.SliceTestData{
 					RepeatedBytesList: [][]byte{
 						{255, 0, 4, 8, 16},

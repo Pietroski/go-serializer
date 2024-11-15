@@ -1,13 +1,14 @@
 package serializer
 
 import (
-	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 	"math"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	grpc_item "gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item"
 )
 
 func TestProtoSerializer(t *testing.T) {
@@ -33,13 +34,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.Item
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			//assert.Equal(t, *msg, target)
-			assert.Equal(t, msg.Id, target.Id)
-			assert.Equal(t, msg.ItemId, target.ItemId)
-			assert.Equal(t, msg.Number, target.Number)
-			assert.Equal(t, msg.SubItem.Date, target.SubItem.Date)
-			assert.Equal(t, msg.SubItem.Amount, target.SubItem.Amount)
-			assert.Equal(t, msg.SubItem.ItemCode, target.SubItem.ItemCode)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 			t.Log(target.SubItem)
 		})
@@ -60,11 +55,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.Item
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			//assert.Equal(t, *msg, target)
-			assert.Equal(t, msg.Id, target.Id)
-			assert.Equal(t, msg.ItemId, target.ItemId)
-			assert.Equal(t, msg.Number, target.Number)
-			assert.Nil(t, target.SubItem)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 			t.Log(target.SubItem)
 		})
@@ -96,17 +87,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.SimplifiedSpecialStructTestData
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			//assert.Equal(t, *msg, target)
-			assert.Equal(t, msg.Bool, target.Bool)
-			assert.Equal(t, msg.Str, target.Str)
-			assert.Equal(t, msg.Int32, target.Int32)
-			assert.Equal(t, msg.Int64, target.Int64)
-			assert.Equal(t, msg.Uint32, target.Uint32)
-			assert.Equal(t, msg.Uint64, target.Uint64)
-			assert.Equal(t, msg.Float32, target.Float32)
-			assert.Equal(t, msg.Float64, target.Float64)
-			assert.Equal(t, msg.Bytes, target.Bytes)
-			assert.Equal(t, msg.RepeatedBytes, target.RepeatedBytes)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -128,11 +109,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.StringStruct
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			assert.Equal(t, msg.FirstString, target.FirstString)
-			assert.Equal(t, msg.SecondString, target.SecondString)
-			assert.Equal(t, msg.ThirdString, target.ThirdString)
-			assert.Equal(t, msg.FourthString, target.FourthString)
-			assert.Equal(t, msg.FifthString, target.FifthString)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -155,12 +132,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.Int64Struct
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			assert.Equal(t, msg.FirstInt64, target.FirstInt64)
-			assert.Equal(t, msg.SecondInt64, target.SecondInt64)
-			assert.Equal(t, msg.ThirdInt64, target.ThirdInt64)
-			assert.Equal(t, msg.FourthInt64, target.FourthInt64)
-			assert.Equal(t, msg.FifthInt64, target.FifthInt64)
-			assert.Equal(t, msg.SixthInt64, target.SixthInt64)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -181,12 +153,7 @@ func TestProtoSerializer(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.NoError(t, err)
-			assert.Equal(t, msg.FirstInt64, target.FirstInt64)
-			assert.Equal(t, msg.SecondInt64, target.SecondInt64)
-			assert.Equal(t, msg.ThirdInt64, target.ThirdInt64)
-			assert.Equal(t, msg.FourthInt64, target.FourthInt64)
-			assert.Equal(t, msg.FifthInt64, target.FifthInt64)
-			assert.Equal(t, msg.SixthInt64, target.SixthInt64)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 	})
@@ -205,6 +172,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -222,6 +190,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -238,6 +207,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -255,6 +225,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -273,6 +244,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -294,6 +266,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -308,6 +281,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -328,6 +302,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -342,6 +317,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -389,6 +365,7 @@ func TestProtoSerializer(t *testing.T) {
 			require.NoError(t, err)
 			err = serializer.Deserialize(bs, &target)
 			require.NoError(t, err)
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 	})
@@ -412,7 +389,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.MapStringStringTestData
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			assert.Equal(t, msg.GetMapStringString(), target.GetMapStringString())
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -441,7 +418,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.MapInt64Int64TestData
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			assert.Equal(t, msg.GetMapInt64Int64(), target.GetMapInt64Int64())
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -475,16 +452,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.MapInt64StructPointerTestData
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			for key, value := range msg.MapInt64StructPointerTestData {
-				assert.Equal(t, value.Int64, target.MapInt64StructPointerTestData[key].Int64)
-				assert.Equal(t, value.Str, target.MapInt64StructPointerTestData[key].Str)
-				assert.Equal(t, value.Bool, target.MapInt64StructPointerTestData[key].Bool)
-			}
-			for key, value := range msg.GetMapInt64StructPointerTestData() {
-				assert.Equal(t, value.GetStr(), target.GetMapInt64StructPointerTestData()[key].GetStr())
-				assert.Equal(t, value.GetBool(), target.GetMapInt64StructPointerTestData()[key].GetBool())
-				assert.Equal(t, value.GetInt64(), target.GetMapInt64StructPointerTestData()[key].GetInt64())
-			}
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 
@@ -518,16 +486,7 @@ func TestProtoSerializer(t *testing.T) {
 			var target grpc_item.MapStringStructPointerTestData
 			err = s.Deserialize(bs, &target)
 			assert.NoError(t, err)
-			for key, value := range msg.MapStringStructPointerTestData {
-				assert.Equal(t, value.Int64, target.MapStringStructPointerTestData[key].Int64)
-				assert.Equal(t, value.Str, target.MapStringStructPointerTestData[key].Str)
-				assert.Equal(t, value.Bool, target.MapStringStructPointerTestData[key].Bool)
-			}
-			for key, value := range msg.GetMapStringStructPointerTestData() {
-				assert.Equal(t, value.GetStr(), target.GetMapStringStructPointerTestData()[key].GetStr())
-				assert.Equal(t, value.GetBool(), target.GetMapStringStructPointerTestData()[key].GetBool())
-				assert.Equal(t, value.GetInt64(), target.GetMapStringStructPointerTestData()[key].GetInt64())
-			}
+			assert.EqualExportedValues(t, *msg, target)
 			t.Log(target)
 		})
 	})

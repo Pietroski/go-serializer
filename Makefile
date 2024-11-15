@@ -37,6 +37,20 @@ test-unit-cover-all-report: report-dir
 
 ########################################################################################################################
 
+bench:
+	go test -bench BenchmarkAll -benchmem ./...
+
+bench-to-file:
+	go test -bench BenchmarkAll -benchmem ./... &> tests/benchmarks/serializer/results/BenchmarkAll.log
+
+generate-bench-report:
+	go test -run TestParseBenchResults -v ./...
+
+generate-full-bench-report:
+	echo 'implement me!'
+
+########################################################################################################################
+
 clean-all-caches:
 	go clean -cache
 	go clean -modcache

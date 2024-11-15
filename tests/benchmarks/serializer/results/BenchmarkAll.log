@@ -1,0 +1,83 @@
+PASS
+ok  	gitlab.com/pietroski-software-company/devex/golang/serializer	0.525s
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/beautifier	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/fakes	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/bytesx	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/data/graph	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/generated/go/pkg/item-error	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/reflectx	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/strconvx	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/internal/testmodels	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/mocks	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/models	[no test files]
+PASS
+ok  	gitlab.com/pietroski-software-company/devex/golang/serializer/serializerx	0.191s
+goos: darwin
+goarch: arm64
+pkg: gitlab.com/pietroski-software-company/devex/golang/serializer/tests/benchmarks/serializer
+cpu: Apple M2 Max
+BenchmarkAll/proto/struct/item_sample/encoding-12         	 9089559	       113.4 ns/op	      48 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/item_sample/decoding-12         	 7738885	       152.7 ns/op	     104 B/op	       3 allocs/op
+BenchmarkAll/proto/struct/item_sample/rebind-12           	 4379649	       274.0 ns/op	     152 B/op	       4 allocs/op
+BenchmarkAll/proto/struct/item_sample_-_nil_sub_item/encoding-12         	16566394	        73.89 ns/op	      24 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/item_sample_-_nil_sub_item/decoding-12         	17472186	        67.98 ns/op	       8 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/item_sample_-_nil_sub_item/rebind-12           	 8472748	       142.6 ns/op	      32 B/op	       2 allocs/op
+BenchmarkAll/proto/struct/simplified_special_struct_test_data/encoding-12         	 7987069	       156.2 ns/op	      96 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/simplified_special_struct_test_data/decoding-12         	 4062687	       291.8 ns/op	     216 B/op	       8 allocs/op
+BenchmarkAll/proto/struct/simplified_special_struct_test_data/rebind-12           	 2637134	       455.8 ns/op	     312 B/op	       9 allocs/op
+BenchmarkAll/proto/struct/string_struct_only/encoding-12                          	11813726	       100.5 ns/op	     112 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/string_struct_only/decoding-12                          	 7849570	       162.6 ns/op	     120 B/op	       5 allocs/op
+BenchmarkAll/proto/struct/string_struct_only/rebind-12                            	 4563016	       264.6 ns/op	     232 B/op	       6 allocs/op
+BenchmarkAll/proto/struct/int64_struct_only/encoding-12                           	14184355	        84.44 ns/op	      48 B/op	       1 allocs/op
+BenchmarkAll/proto/struct/int64_struct_only/decoding-12                           	17910202	        67.93 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAll/proto/struct/int64_struct_only/rebind-12                             	 7774144	       153.8 ns/op	      48 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]int64/encoding-12                                      	12045270	       100.2 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]int64/decoding-12                                      	10218799	       119.5 ns/op	     112 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]int64/rebind-12                                        	 5341918	       223.0 ns/op	     176 B/op	       2 allocs/op
+BenchmarkAll/proto/slice/[]uint64/encoding-12                                     	12068841	       100.5 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]uint64/decoding-12                                     	10022692	       118.0 ns/op	     112 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]uint64/rebind-12                                       	 5346493	       223.0 ns/op	     176 B/op	       2 allocs/op
+BenchmarkAll/proto/slice/[]string/encoding-12                                     	14931616	        81.07 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]string/decoding-12                                     	 5464425	       199.8 ns/op	     176 B/op	       7 allocs/op
+BenchmarkAll/proto/slice/[]string/rebind-12                                       	 4156489	       287.5 ns/op	     240 B/op	       8 allocs/op
+BenchmarkAll/proto/slice/[]byte/encoding-12                                       	28069983	        43.14 ns/op	      16 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]byte/decoding-12                                       	21603974	        55.05 ns/op	      16 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[]byte/rebind-12                                         	11794152	       101.4 ns/op	      32 B/op	       2 allocs/op
+BenchmarkAll/proto/slice/[][]byte/encoding-12                                     	16499371	        72.18 ns/op	      80 B/op	       1 allocs/op
+BenchmarkAll/proto/slice/[][]byte/decoding-12                                     	 3949396	       305.8 ns/op	     440 B/op	       9 allocs/op
+BenchmarkAll/proto/slice/[][]byte/rebind-12                                       	 3092402	       387.0 ns/op	     520 B/op	      10 allocs/op
+BenchmarkAll/proto/map/map[string]string/encoding-12                              	 1841286	       657.5 ns/op	     288 B/op	      13 allocs/op
+BenchmarkAll/proto/map/map[string]string/decoding-12                              	 1771293	       676.8 ns/op	     608 B/op	      20 allocs/op
+BenchmarkAll/proto/map/map[string]string/rebind-12                                	  870684	      1367 ns/op	     896 B/op	      33 allocs/op
+BenchmarkAll/proto/map/map[int64]int64/encoding-12                                	  976479	      1198 ns/op	     432 B/op	      41 allocs/op
+BenchmarkAll/proto/map/map[int64]int64/decoding-12                                	  788588	      1453 ns/op	     708 B/op	      31 allocs/op
+BenchmarkAll/proto/map/map[int64]int64/rebind-12                                  	  433254	      2758 ns/op	    1140 B/op	      72 allocs/op
+BenchmarkAll/proto/map/map[int64]*grpc_item.StructTestData/encoding-12            	 2333781	       515.7 ns/op	     128 B/op	       7 allocs/op
+BenchmarkAll/proto/map/map[int64]*grpc_item.StructTestData/decoding-12            	 2118142	       567.1 ns/op	     488 B/op	      10 allocs/op
+BenchmarkAll/proto/map/map[int64]*grpc_item.StructTestData/rebind-12              	  990326	      1133 ns/op	     616 B/op	      17 allocs/op
+BenchmarkAll/proto/map/map[string]*grpc_item.StructTestData/encoding-12           	 1881562	       639.7 ns/op	     208 B/op	       7 allocs/op
+BenchmarkAll/proto/map/map[string]*grpc_item.StructTestData/decoding-12           	 1566169	       725.8 ns/op	     664 B/op	      16 allocs/op
+BenchmarkAll/proto/map/map[string]*grpc_item.StructTestData/rebind-12             	  861715	      1388 ns/op	     872 B/op	      23 allocs/op
+BenchmarkAll/binary/struct/item_sample/encoding-12                                	12303285	        97.70 ns/op	     128 B/op	       2 allocs/op
+BenchmarkAll/binary/struct/item_sample/decoding-12                                	10719932	       111.5 ns/op	      56 B/op	       3 allocs/op
+BenchmarkAll/binary/struct/item_sample/rebind-12                                  	 5338694	       223.7 ns/op	     184 B/op	       5 allocs/op
+BenchmarkAll/binary/struct/item_sample_-_nil_sub_item/encoding-12                 	24238526	        49.58 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/binary/struct/item_sample_-_nil_sub_item/decoding-12                 	30724194	        38.99 ns/op	       8 B/op	       1 allocs/op
+BenchmarkAll/binary/struct/item_sample_-_nil_sub_item/rebind-12                   	13109481	        93.04 ns/op	      72 B/op	       2 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample/encoding-12                            	12383383	        96.91 ns/op	     128 B/op	       2 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample/decoding-12                            	13358466	        86.90 ns/op	      32 B/op	       1 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample/rebind-12                              	 6153348	       195.3 ns/op	     160 B/op	       3 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample_-_nil_sub_item/encoding-12             	23474580	        49.62 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample_-_nil_sub_item/decoding-12             	42175062	        28.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAll/raw_binary/struct/item_sample_-_nil_sub_item/rebind-12               	14904069	        81.02 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/x_binary/struct/item_sample/encoding-12                              	12149836	        98.18 ns/op	     128 B/op	       2 allocs/op
+BenchmarkAll/x_binary/struct/item_sample/decoding-12                              	13536651	        87.93 ns/op	      32 B/op	       1 allocs/op
+BenchmarkAll/x_binary/struct/item_sample/rebind-12                                	 6005070	       200.2 ns/op	     160 B/op	       3 allocs/op
+BenchmarkAll/x_binary/struct/item_sample_-_nil_sub_item/encoding-12               	23975125	        49.87 ns/op	      64 B/op	       1 allocs/op
+BenchmarkAll/x_binary/struct/item_sample_-_nil_sub_item/decoding-12               	40352862	        29.84 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAll/x_binary/struct/item_sample_-_nil_sub_item/rebind-12                 	14542075	        80.64 ns/op	      64 B/op	       1 allocs/op
+PASS
+ok  	gitlab.com/pietroski-software-company/devex/golang/serializer/tests/benchmarks/serializer	85.669s
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/tools/mockgen	[no test files]
+?   	gitlab.com/pietroski-software-company/devex/golang/serializer/tools/proto	[no test files]

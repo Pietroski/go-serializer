@@ -193,47 +193,47 @@ type (
 	}
 
 	TestData struct {
-		FieldStr   string
-		FieldInt   int8
-		FieldBool  bool
-		FieldBytes []byte
+		FieldStr   string `json:"field_str,omitempty"`
+		FieldInt   int8   `json:"field_int,omitempty"`
+		FieldBool  bool   `json:"field_bool,omitempty"`
+		FieldBytes []byte `json:"field_bytes,omitempty"`
 
-		FieldStrPtr   *string
-		FieldIntPtr   *int
-		FieldBoolPtr  *bool
-		FieldBytesPtr *[]byte
+		FieldStrPtr   *string `json:"field_str_ptr,omitempty"`
+		FieldIntPtr   *int    `json:"field_int_ptr,omitempty"`
+		FieldBoolPtr  *bool   `json:"field_bool_ptr,omitempty"`
+		FieldBytesPtr *[]byte `json:"field_bytes_ptr,omitempty"`
 
-		SubTestData    SubTestData
-		SubTestDataPtr *SubTestData
-		SliceTestData  SliceTestData
-		MapTestData    MapTestData
+		SubTestData    SubTestData   `json:"sub_test_data,omitempty"`
+		SubTestDataPtr *SubTestData  `json:"sub_test_data_ptr,omitempty"`
+		SliceTestData  SliceTestData `json:"slice_test_data,omitempty"`
+		MapTestData    MapTestData   `json:"map_test_data,omitempty"`
 	}
 
 	SubTestData struct {
-		FieldStr   string
-		FieldInt32 int32
-		FieldBool  bool
-		FieldInt64 int64
-		FieldInt   int
+		FieldStr   string `json:"field_str,omitempty"`
+		FieldInt32 int32  `json:"field_int_32,omitempty"`
+		FieldBool  bool   `json:"field_bool,omitempty"`
+		FieldInt64 int64  `json:"field_int_64,omitempty"`
+		FieldInt   int    `json:"field_int,omitempty"`
 
-		FieldStrPtr   *string
-		FieldInt32Ptr *int32
-		FieldBoolPtr  *bool
-		FieldInt64Ptr *int64
-		FieldIntPtr   *int
+		FieldStrPtr   *string `json:"field_str_ptr,omitempty"`
+		FieldInt32Ptr *int32  `json:"field_int_32_ptr,omitempty"`
+		FieldBoolPtr  *bool   `json:"field_bool_ptr,omitempty"`
+		FieldInt64Ptr *int64  `json:"field_int_64_ptr,omitempty"`
+		FieldIntPtr   *int    `json:"field_int_ptr,omitempty"`
 	}
 
 	SliceTestData struct {
-		IntList       []int
-		IntIntList    [][]int
-		ThreeDIntList [][][]int
+		IntList       []int     `json:"int_list,omitempty"`
+		IntIntList    [][]int   `json:"int_int_list,omitempty"`
+		ThreeDIntList [][][]int `json:"three_d_int_list,omitempty"`
 
-		StrList    []string
-		StrStrList [][]string
+		StrList    []string   `json:"str_list,omitempty"`
+		StrStrList [][]string `json:"str_str_list,omitempty"`
 
-		StructList       []SliceItem
-		PtrStructList    []*SliceItem
-		PtrStructNilList []*SliceItem
+		StructList       []SliceItem  `json:"struct_list,omitempty"`
+		PtrStructList    []*SliceItem `json:"ptr_struct_list,omitempty"`
+		PtrStructNilList []*SliceItem `json:"ptr_struct_nil_list,omitempty"`
 	}
 
 	MapTestData struct {
@@ -242,9 +242,9 @@ type (
 	}
 
 	SliceItem struct {
-		Int  int
-		Str  string
-		Bool bool
+		Int  int    `json:"int,omitempty"`
+		Str  string `json:"str,omitempty"`
+		Bool bool   `json:"bool,omitempty"`
 	}
 
 	ProtoTypeSliceTestData struct {
@@ -258,19 +258,19 @@ type (
 	}
 
 	ProtoEquivalentTestData struct {
-		FieldStr   string
-		FieldInt   int8
-		FieldBool  bool
-		FieldBytes []byte
+		FieldStr   string `json:"field_str,omitempty"`
+		FieldInt   int8   `json:"field_int,omitempty"`
+		FieldBool  bool   `json:"field_bool,omitempty"`
+		FieldBytes []byte `json:"field_bytes,omitempty"`
 
-		FieldStrPtr   *string
-		FieldIntPtr   *int
-		FieldBoolPtr  *bool
-		FieldBytesPtr *[]byte
+		FieldStrPtr   *string `json:"field_str_ptr,omitempty"`
+		FieldIntPtr   *int    `json:"field_int_ptr,omitempty"`
+		FieldBoolPtr  *bool   `json:"field_bool_ptr,omitempty"`
+		FieldBytesPtr *[]byte `json:"field_bytes_ptr,omitempty"`
 
-		SubTestData    SubTestData
-		SubTestDataPtr *SubTestData
-		SliceTestData  SliceTestData
-		MapTestData    MapTestData
+		SubTestData    SubTestData   `json:"sub_test_data,omitempty"`
+		SubTestDataPtr *SubTestData  `json:"sub_test_data_ptr,omitempty,omitempty"`
+		SliceTestData  SliceTestData `json:"slice_test_data,omitempty"`
+		MapTestData    MapTestData   `json:"map_test_data,omitempty"`
 	}
 )
