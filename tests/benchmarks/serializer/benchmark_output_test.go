@@ -3,9 +3,6 @@ package serializer
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-echarts/go-echarts/v2/components"
-	"github.com/go-echarts/go-echarts/v2/opts"
-	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/strconvx"
 	"os"
 	"reflect"
 	"strings"
@@ -13,9 +10,12 @@ import (
 	"time"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	"github.com/stretchr/testify/require"
+	"gitlab.com/pietroski-software-company/devex/golang/serializer/internal/strconvx"
 )
 
 func TestWriteBenchmarkResults(t *testing.T) {
@@ -162,8 +162,6 @@ func createBenchmarkChartResults(t *testing.T) {
 							strings.ReplaceAll(testCase.FieldByName("CaseName").String(), " ", "_"),
 						)
 
-						// t.Log(caseName)
-
 						parsedResults := parseBenchmarkResults[*testing.T](t)
 						for _, pr := range parsedResults {
 							opsCount := pr.OpsCount
@@ -279,7 +277,6 @@ func createBenchmarkChartResults(t *testing.T) {
 							}
 
 							{
-								//t.Log(strings.Contains(pr.TestName, caseName+"/rebind-12"), pr.TestName, caseName+"/rebind-12")
 								if strings.Contains(pr.TestName, casePathName+"/rebind-12") {
 									seriesData["opsCount"][dataTypeName][caseName][serializerName][2] =
 										opts.BarData{Value: opsCount}
@@ -318,21 +315,42 @@ func createBenchmarkChartResults(t *testing.T) {
 
 	//t.Log(seriesData)
 
-	bs, err := json.MarshalIndent(seriesData, "", "  ")
-	require.NoError(t, err)
-	t.Log(string(bs))
+	//bs, err := json.MarshalIndent(seriesData, "", "  ")
+	//require.NoError(t, err)
+	//t.Log(string(bs))
 
-	chartFile, err := os.OpenFile(
-		"results/charts/benchmark_chart_results.html",
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	require.NoError(t, err)
-	defer func() { _ = chartFile.Close() }()
+	//debuggerFile, err := os.OpenFile(
+	//	fmt.Sprintf("results/charts/debugger_results.json"),
+	//	os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	//require.NoError(t, err)
 
-	page := components.NewPage()
+	fullPageReport := components.NewPage()
+	defer func() {
+		fullChartReportFile, err := os.OpenFile(
+			fmt.Sprintf("results/charts/benchmark_chart_results.html"),
+			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		require.NoError(t, err)
+		defer func(file *os.File) { _ = file.Close() }(fullChartReportFile)
+
+		err = fullPageReport.Render(fullChartReportFile)
+		require.NoError(t, err)
+	}()
 
 	for quantifierName, quantifierValue := range seriesData {
 		for dataTypeName, dataTypeResult := range quantifierValue {
+			err := os.MkdirAll(fmt.Sprintf("results/charts/%s", dataTypeName), 0750)
+			require.NoError(t, err)
+
+			chartFile, err := os.OpenFile(
+				fmt.Sprintf("results/charts/%s/benchmark_chart_results_%s.html", dataTypeName, quantifierName),
+				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+			require.NoError(t, err)
+			// defer func(file *os.File) { _ = file.Close() }(chartFile)
+
+			page := components.NewPage()
+
 			for caseName, caseResult := range dataTypeResult {
+
 				bar := charts.NewBar()
 				bar.SetGlobalOptions(
 					charts.WithTitleOpts(opts.Title{
@@ -340,41 +358,49 @@ func createBenchmarkChartResults(t *testing.T) {
 							"Benchmark Chart - Serializer - %s - %s - %s",
 							dataTypeName, quantifierName, caseName),
 						Subtitle: "serializer types benchmark results",
-						//Top:         "50",
 					}),
 					charts.WithLegendOpts(opts.Legend{
 						Top: "50",
-						//Bottom:        "",
 					}),
 				)
-				xAxis := bar.SetXAxis([]string{"encoding", "decoding", "rebind"}) // *1
-
-				//xAxis := bar.SetXAxis(map[string][]string{
-				//	"opsCount":   {"encoding", "decoding", "rebind"},
-				//	"avgOpTime":  {"encoding", "decoding", "rebind"},
-				//	"allocSize":  {"encoding", "decoding", "rebind"},
-				//	"allocCount": {"encoding", "decoding", "rebind"},
-				//}) // *1
+				xAxis := bar.SetXAxis([]string{"encoding", "decoding", "rebind"})
 
 				for serializerName, serializerResult := range caseResult {
 					name := fmt.Sprintf("%s_%s_%s", serializerName, dataTypeName, caseName)
 
-					//seriesOpts := charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(0, 0, 0)"})
-					//if serializerName == "x_binary" {
-					//	seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(238, 102, 102)"})
-					//}
-					//if serializerName == "proto" {
-					//	seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(84, 112, 198)"})
-					//} // 145,204,117 (green) |
+					seriesOpts := charts.WithItemStyleOpts(opts.ItemStyle{})
+					if serializerName == "proto" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(84,112,198)"})
+					}
+					if serializerName == "binary" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(145,204,117)"})
+					}
+					if serializerName == "raw_binary" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(242, 202, 107)"})
+					}
+					if serializerName == "x_binary" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(238, 102, 102)"})
+					}
+					if serializerName == "msgpack" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(236, 138, 93)"})
+					}
+					if serializerName == "json" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(133, 190, 219)"})
+					}
+					if serializerName == "gob" {
+						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(89, 160, 118)"})
+					}
 
-					xAxis.AddSeries(name, serializerResult) // seriesOpts
+					xAxis.AddSeries(name, serializerResult, seriesOpts)
 				}
 
 				page.AddCharts(bar)
+				fullPageReport.AddCharts(bar)
 			}
+
+			err = page.Render(chartFile)
+			require.NoError(t, err)
+			require.NoError(t, chartFile.Close())
 		}
 	}
-
-	err = page.Render(chartFile)
-	require.NoError(t, err)
 }

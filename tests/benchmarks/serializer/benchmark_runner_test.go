@@ -2,6 +2,7 @@ package serializer
 
 import (
 	"fmt"
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -20,6 +21,18 @@ func Benchmark(b *testing.B) {
 		Name: "TestBenchmarkAll",
 		F:    TestBenchmarkAll,
 	}})
+
+	bs, err := exec.Command(
+		"pwd",
+	).Output()
+	require.NoError(b, err)
+	b.Log(string(bs))
+
+	err = exec.Command(
+		"cd", "../../..", "&&", "go", "test", "-bench", "BenchmarkAll",
+		"-benchmem", "./...", "&>", "./tests/benchmarks/serializer/results/BenchmarkAll.log",
+	).Run()
+	require.NoError(b, err)
 }
 
 func BenchmarkAll(b *testing.B) {
@@ -97,6 +110,7 @@ func RunBenchmarkTestCase(
 		require.NoError(b, err)
 		err = s.Deserialize(bs, target)
 		require.NoError(b, err)
+		require.EqualExportedValues(b, msg, target)
 
 		b.Run("encoding", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
@@ -116,9 +130,6 @@ func RunBenchmarkTestCase(
 				_ = s.Deserialize(bs, target)
 			}
 		})
-
-		//b.Log(msg)
-		//b.Log(target)
 	}
 }
 

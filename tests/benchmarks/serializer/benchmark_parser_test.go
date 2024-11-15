@@ -46,7 +46,7 @@ func parseBenchmarkResults[T BenchTest](tb T) ParsedBenchmarkResults {
 
 	benchmarkResult := string(b)
 	regexBench := regexp.MustCompile(
-		`([a-zA-Z0-9/_\-\]\[]+)+\s+(\d+)+\s+(\d+.?\d+?\s+[a-z]+/op)+\s+(\d+\s+[a-zA-Z]/op)+\s+(\d+\s+allocs/op)`)
+		`([a-zA-Z0-9/_\-\]\[*.]+)+\s+(\d+)+\s+(\d+.?\d+?\s+[a-z]+/op)+\s+(\d+\s+[a-zA-Z]/op)+\s+(\d+\s+allocs/op)`)
 	matches := regexBench.FindAllStringSubmatch(benchmarkResult, -1)
 
 	parsedBenchmarkResults := make(ParsedBenchmarkResults, len(matches))
