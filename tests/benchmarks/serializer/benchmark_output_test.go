@@ -325,6 +325,7 @@ func createBenchmarkChartResults(t *testing.T) {
 	//require.NoError(t, err)
 
 	fullPageReport := components.NewPage()
+	fullPageReportWithGob := components.NewPage()
 	defer func() {
 		fullChartReportFile, err := os.OpenFile(
 			fmt.Sprintf("results/charts/benchmark_chart_results.html"),
@@ -332,7 +333,15 @@ func createBenchmarkChartResults(t *testing.T) {
 		require.NoError(t, err)
 		defer func(file *os.File) { _ = file.Close() }(fullChartReportFile)
 
+		fullChartReportFileWithGob, err := os.OpenFile(
+			fmt.Sprintf("results/with_gob/charts/benchmark_chart_results.html"),
+			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		require.NoError(t, err)
+		defer func(file *os.File) { _ = file.Close() }(fullChartReportFileWithGob)
+
 		err = fullPageReport.Render(fullChartReportFile)
+		require.NoError(t, err)
+		err = fullPageReportWithGob.Render(fullChartReportFileWithGob)
 		require.NoError(t, err)
 	}()
 
@@ -340,19 +349,27 @@ func createBenchmarkChartResults(t *testing.T) {
 		for dataTypeName, dataTypeResult := range quantifierValue {
 			err := os.MkdirAll(fmt.Sprintf("results/charts/%s", dataTypeName), 0750)
 			require.NoError(t, err)
+			err = os.MkdirAll(fmt.Sprintf("results/with_gob/charts/%s", dataTypeName), 0750)
+			require.NoError(t, err)
 
 			chartFile, err := os.OpenFile(
 				fmt.Sprintf("results/charts/%s/benchmark_chart_results_%s.html", dataTypeName, quantifierName),
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 			require.NoError(t, err)
-			// defer func(file *os.File) { _ = file.Close() }(chartFile)
+			chartFileWithGob, err := os.OpenFile(
+				fmt.Sprintf("results/with_gob/charts/%s/benchmark_chart_results_%s.html",
+					dataTypeName, quantifierName),
+				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+			require.NoError(t, err)
 
 			page := components.NewPage()
+			pageWithGob := components.NewPage()
 
 			for caseName, caseResult := range dataTypeResult {
 
 				bar := charts.NewBar()
-				bar.SetGlobalOptions(
+				barWithGob := charts.NewBar()
+				chartGlobalOpts := []charts.GlobalOpts{
 					charts.WithTitleOpts(opts.Title{
 						Title: fmt.Sprintf(
 							"Benchmark Chart - Serializer - %s - %s - %s",
@@ -362,8 +379,11 @@ func createBenchmarkChartResults(t *testing.T) {
 					charts.WithLegendOpts(opts.Legend{
 						Top: "50",
 					}),
-				)
+				}
+				bar.SetGlobalOptions(chartGlobalOpts...)
 				xAxis := bar.SetXAxis([]string{"encoding", "decoding", "rebind"})
+				barWithGob.SetGlobalOptions(chartGlobalOpts...)
+				xAxisWithGob := barWithGob.SetXAxis([]string{"encoding", "decoding", "rebind"})
 
 				for serializerName, serializerResult := range caseResult {
 					name := fmt.Sprintf("%s_%s_%s", serializerName, dataTypeName, caseName)
@@ -389,18 +409,27 @@ func createBenchmarkChartResults(t *testing.T) {
 					}
 					if serializerName == "gob" {
 						seriesOpts = charts.WithItemStyleOpts(opts.ItemStyle{Color: "rgb(89, 160, 118)"})
+						xAxisWithGob.AddSeries(name, serializerResult, seriesOpts)
+						continue
 					}
 
+					xAxisWithGob.AddSeries(name, serializerResult, seriesOpts)
 					xAxis.AddSeries(name, serializerResult, seriesOpts)
 				}
 
 				page.AddCharts(bar)
 				fullPageReport.AddCharts(bar)
+				pageWithGob.AddCharts(barWithGob)
+				fullPageReportWithGob.AddCharts(barWithGob)
 			}
 
 			err = page.Render(chartFile)
 			require.NoError(t, err)
 			require.NoError(t, chartFile.Close())
+
+			err = pageWithGob.Render(chartFileWithGob)
+			require.NoError(t, err)
+			require.NoError(t, chartFileWithGob.Close())
 		}
 	}
 }

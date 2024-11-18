@@ -110,7 +110,19 @@ func RunBenchmarkTestCase(
 		require.NoError(b, err)
 		err = s.Deserialize(bs, target)
 		require.NoError(b, err)
-		require.EqualExportedValues(b, msg, target)
+		//require.EqualExportedValues(b, msg, target)
+
+		switch msg.(type) {
+		case bool, string,
+			int, int8, int16, int32, int64,
+			uint, uint8, uint16, uint32, uint64,
+			float32, float64,
+			complex64, complex128:
+			tgt := reflect.Indirect(reflect.ValueOf(target))
+			assert.EqualValues(b, msg, tgt.Interface())
+		default:
+			assert.EqualExportedValues(b, msg, target)
+		}
 
 		b.Run("encoding", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
@@ -194,8 +206,16 @@ func RunTestBenchmarkTestCase(
 		err = s.Deserialize(bs, target)
 		require.NoError(t, err)
 
-		assert.EqualExportedValues(t, msg, target)
-		//t.Log(msg)
-		//t.Log(target)
+		switch msg.(type) {
+		case bool, string,
+			int, int8, int16, int32, int64,
+			uint, uint8, uint16, uint32, uint64,
+			float32, float64,
+			complex64, complex128:
+			tgt := reflect.Indirect(reflect.ValueOf(target))
+			assert.EqualValues(t, msg, tgt.Interface())
+		default:
+			assert.EqualExportedValues(t, msg, target)
+		}
 	}
 }

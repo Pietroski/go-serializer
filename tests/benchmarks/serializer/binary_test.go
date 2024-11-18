@@ -21,7 +21,7 @@ func BenchmarkBinarySerializer(b *testing.B) {
 		var target string
 		err = s.Deserialize(bs, &target)
 		require.NoError(b, err)
-		require.EqualExportedValues(b, msg, &target)
+		require.Equal(b, msg, target)
 
 		b.Run("encoding", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
@@ -30,7 +30,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 		})
 
 		b.Run("decoding", func(b *testing.B) {
-			_ = s.Deserialize(bs, &target)
+			for i := 0; i < b.N; i++ {
+				_ = s.Deserialize(bs, &target)
+			}
 		})
 
 		b.Run("rebind", func(b *testing.B) {
@@ -39,85 +41,66 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				_ = s.Deserialize(bs, &target)
 			}
 		})
-
-		b.Log()
-		b.Log(target)
 	})
 
 	b.Run("number", func(b *testing.B) {
-		b.Run("int", func(b *testing.B) {
-			s := serializer.NewBinarySerializer()
-
+		b.Run("int64", func(b *testing.B) {
 			msg := int64(math.MaxInt64)
 
-			b.Run("encoding", func(b *testing.B) {
-				var bs []byte
-				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
-				}
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target int64
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.Equal(b, msg, target)
 
-				var target int64
-				_ = s.Deserialize(bs, &target)
-				b.Log(target)
+			b.Run("encoding", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+				}
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				bs, _ := s.Serialize(msg)
-
-				var target int64
 				for i := 0; i < b.N; i++ {
 					_ = s.Deserialize(bs, &target)
 				}
-				b.Log(target)
 			})
 
-			b.Run("encoding - decoding", func(b *testing.B) {
-				var target int64
-				bs, _ := s.Serialize(msg)
-				_ = s.Deserialize(bs, &target)
-				b.Log(target)
-
+			b.Run("rebind", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
 		})
 
 		b.Run("uint64", func(b *testing.B) {
-			s := serializer.NewBinarySerializer()
-
 			msg := uint64(math.MaxUint64)
 
-			b.Run("encoding", func(b *testing.B) {
-				var bs []byte
-				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
-				}
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target uint64
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.Equal(b, msg, target)
 
-				var target uint64
-				_ = s.Deserialize(bs, &target)
-				b.Log(target)
+			b.Run("encoding", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+				}
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				bs, _ := s.Serialize(msg)
-
-				var target uint64
 				for i := 0; i < b.N; i++ {
 					_ = s.Deserialize(bs, &target)
 				}
-				b.Log(target)
 			})
 
-			b.Run("encoding - decoding", func(b *testing.B) {
-				var target uint64
-				bs, _ := s.Serialize(msg)
-				_ = s.Deserialize(bs, &target)
-				b.Log(target)
-
+			b.Run("rebind", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					bs, _ = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
@@ -137,38 +120,35 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				},
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target testmodels.Item
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-
-				var target testmodels.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
-				}
-				require.NoError(b, err)
-			})
-
-			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				var target testmodels.Item
-				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("item sample - nil sub item", func(b *testing.B) {
@@ -178,38 +158,35 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				Number: 5_000_000_000,
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target testmodels.Item
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-
-				var target testmodels.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
-				}
-				require.NoError(b, err)
-			})
-
-			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				var target testmodels.Item
-				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("simplified special struct test data", func(b *testing.B) {
@@ -230,43 +207,35 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				},
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target testmodels.SimplifiedSpecialStructTestData
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-				require.NotNil(b, bs)
-
-				var target testmodels.Item
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
-				}
-				require.NoError(b, err)
-
-				b.Log(target)
-			})
-
-			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				var target testmodels.Item
-				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
-
-				b.Log(target)
 			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("string struct only", func(b *testing.B) {
@@ -278,38 +247,35 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				FifthString:  "fifth string value",
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target testmodels.StringStruct
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-
-				var target testmodels.StringStruct
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
-				}
-				require.NoError(b, err)
-			})
-
-			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				var target testmodels.StringStruct
-				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+
+			b.Log()
+			b.Log(target)
 		})
 
 		b.Run("int64 struct only", func(b *testing.B) {
@@ -322,38 +288,35 @@ func BenchmarkBinarySerializer(b *testing.B) {
 				SixthInt64:  -0,
 			}
 
-			b.Run("encoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
+			s := serializer.NewBinarySerializer()
+			bs, err := s.Serialize(msg)
+			require.NoError(b, err)
+			var target testmodels.Int64Struct
+			err = s.Deserialize(bs, &target)
+			require.NoError(b, err)
+			require.EqualExportedValues(b, msg, &target)
 
-				var err error
+			b.Run("encoding", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					_, err = s.Serialize(msg)
+					_, _ = s.Serialize(msg)
 				}
-				require.NoError(b, err)
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				bs, err := s.Serialize(msg)
-				require.NoError(b, err)
-
-				var target testmodels.Int64Struct
 				for i := 0; i < b.N; i++ {
-					err = s.Deserialize(bs, &target)
-				}
-				require.NoError(b, err)
-			})
-
-			b.Run("encoding - decoding", func(b *testing.B) {
-				s := serializer.NewBinarySerializer()
-
-				var target testmodels.Int64Struct
-				for i := 0; i < b.N; i++ {
-					bs, _ := s.Serialize(msg)
 					_ = s.Deserialize(bs, &target)
 				}
 			})
+
+			b.Run("encode - decode", func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, _ = s.Serialize(msg)
+					_ = s.Deserialize(bs, &target)
+				}
+			})
+
+			b.Log()
+			b.Log(target)
 		})
 	})
 
@@ -378,7 +341,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				_ = s.Deserialize(bs, &target)
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
@@ -412,7 +377,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				_ = s.Deserialize(bs, &target)
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
@@ -446,7 +413,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				_ = s.Deserialize(bs, &target)
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
@@ -480,7 +449,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				_ = s.Deserialize(bs, &target)
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {
@@ -520,7 +491,9 @@ func BenchmarkBinarySerializer(b *testing.B) {
 			})
 
 			b.Run("decoding", func(b *testing.B) {
-				_ = s.Deserialize(bs, &target)
+				for i := 0; i < b.N; i++ {
+					_ = s.Deserialize(bs, &target)
+				}
 			})
 
 			b.Run("encode - decode", func(b *testing.B) {

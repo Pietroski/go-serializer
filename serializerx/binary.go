@@ -599,12 +599,6 @@ func (s *BinarySerializer) serializeReflectPrimitiveSliceArray(
 			size := f.Len()
 			bbw.Write(bytesx.AddUint32(uint32(size)))
 			if size == 0 {
-				//if f.IsNil() {
-				//	bbw.Put(1)
-				//} else {
-				//	bbw.Put(0)
-				//}
-
 				continue
 			}
 
@@ -672,12 +666,6 @@ func (s *BinarySerializer) deserializeReflectPrimitiveSliceArray(
 		for i := range ii {
 			l := int(bytesx.Uint32(bbr.Read(4)))
 			if l == 0 {
-				//if bbr.Next() == 1 {
-				//	ii[i] = nil
-				//} else {
-				//	ii[i] = []byte{}
-				//}
-
 				continue
 			}
 

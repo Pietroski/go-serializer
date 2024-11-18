@@ -608,12 +608,6 @@ func (s *RawBinarySerializer) serializeReflectPrimitiveSliceArray(
 			size := f.Len()
 			bbw.Write(bytesx.AddUint32(uint32(size)))
 			if size == 0 {
-				//if f.IsNil() {
-				//	bbw.Put(1)
-				//} else {
-				//	bbw.Put(0)
-				//}
-
 				continue
 			}
 
@@ -651,16 +645,16 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 			unsafe.Slice((*int64)(unsafe.Pointer(&bbr.Read(length * 8)[0])), length)
 		return true
 	case "[]int8":
-		*(*[]int64)(unsafe.Pointer(field.UnsafeAddr())) =
-			unsafe.Slice((*int64)(unsafe.Pointer(&bbr.Read(length)[0])), length)
+		*(*[]int8)(unsafe.Pointer(field.UnsafeAddr())) =
+			unsafe.Slice((*int8)(unsafe.Pointer(&bbr.Read(length)[0])), length)
 		return true
 	case "[]int16":
-		*(*[]int64)(unsafe.Pointer(field.UnsafeAddr())) =
-			unsafe.Slice((*int64)(unsafe.Pointer(&bbr.Read(length * 2)[0])), length)
+		*(*[]int16)(unsafe.Pointer(field.UnsafeAddr())) =
+			unsafe.Slice((*int16)(unsafe.Pointer(&bbr.Read(length * 2)[0])), length)
 		return true
 	case "[]int32":
-		*(*[]int64)(unsafe.Pointer(field.UnsafeAddr())) =
-			unsafe.Slice((*int64)(unsafe.Pointer(&bbr.Read(length * 4)[0])), length)
+		*(*[]int32)(unsafe.Pointer(field.UnsafeAddr())) =
+			unsafe.Slice((*int32)(unsafe.Pointer(&bbr.Read(length * 4)[0])), length)
 		return true
 	case "[]int64":
 		*(*[]int64)(unsafe.Pointer(field.UnsafeAddr())) =
@@ -674,12 +668,12 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		field.SetBytes(bbr.Read(length))
 		return true
 	case "[]uint16":
-		*(*[]uint64)(unsafe.Pointer(field.UnsafeAddr())) =
-			unsafe.Slice((*uint64)(unsafe.Pointer(&bbr.Read(length * 2)[0])), length)
+		*(*[]uint16)(unsafe.Pointer(field.UnsafeAddr())) =
+			unsafe.Slice((*uint16)(unsafe.Pointer(&bbr.Read(length * 2)[0])), length)
 		return true
 	case "[]uint32":
-		*(*[]uint64)(unsafe.Pointer(field.UnsafeAddr())) =
-			unsafe.Slice((*uint64)(unsafe.Pointer(&bbr.Read(length * 4)[0])), length)
+		*(*[]uint32)(unsafe.Pointer(field.UnsafeAddr())) =
+			unsafe.Slice((*uint32)(unsafe.Pointer(&bbr.Read(length * 4)[0])), length)
 		return true
 	case "[]uint64":
 		*(*[]uint64)(unsafe.Pointer(field.UnsafeAddr())) =
@@ -690,12 +684,6 @@ func (s *RawBinarySerializer) deserializeReflectPrimitiveSliceArray(
 		for i := range ii {
 			l := int(bytesx.Uint32(bbr.Read(4)))
 			if l == 0 {
-				//if bbr.Next() == 1 {
-				//	ii[i] = nil
-				//} else {
-				//	ii[i] = []byte{}
-				//}
-
 				continue
 			}
 

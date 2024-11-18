@@ -297,6 +297,45 @@ var BenchmarkData = BenchmarkRunner{
 		Binary: Runner{
 			Serializer: serializer.NewBinarySerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
@@ -521,6 +560,45 @@ var BenchmarkData = BenchmarkRunner{
 		RawBinary: Runner{
 			Serializer: serializer.NewRawBinarySerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
@@ -745,6 +823,45 @@ var BenchmarkData = BenchmarkRunner{
 		XBinary: Runner{
 			Serializer: serializerx.NewBinarySerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
@@ -969,6 +1086,45 @@ var BenchmarkData = BenchmarkRunner{
 		MsgPack: Runner{
 			Serializer: serializer.NewMsgPackSerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
@@ -1193,6 +1349,45 @@ var BenchmarkData = BenchmarkRunner{
 		Json: Runner{
 			Serializer: serializer.NewJsonSerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
@@ -1417,6 +1612,45 @@ var BenchmarkData = BenchmarkRunner{
 		Gob: Runner{
 			Serializer: serializer.NewGobSerializer(),
 			DataType: DataType{
+				String: []TestCase{
+					{
+						CaseName: "complex string",
+						TestData: TestData{
+							Msg:    "test-again#$çcçá",
+							Target: new(string),
+						},
+					},
+				},
+				Number: []TestCase{
+					{
+						CaseName: "int",
+						TestData: TestData{
+							Msg:    int(1_500_700_429),
+							Target: new(int),
+						},
+					},
+					{
+						CaseName: "int64",
+						TestData: TestData{
+							Msg:    int64(1_500_700_095),
+							Target: new(int64),
+						},
+					},
+					{
+						CaseName: "uint",
+						TestData: TestData{
+							Msg:    uint(1_500_700_070),
+							Target: new(uint),
+						},
+					},
+					{
+						CaseName: "uint64",
+						TestData: TestData{
+							Msg:    uint64(1_500_700_787),
+							Target: new(uint64),
+						},
+					},
+				},
 				Struct: []TestCase{
 					{
 						CaseName: "item sample",
