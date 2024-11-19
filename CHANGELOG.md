@@ -1,13 +1,30 @@
 # CHANGELOG
 
 # [UNRELEASED]
- 
-# [v1.2.0]
+ - [gitlab/main, github/main, gitea/main, gitea/HEAD] - docs: readme
+ - chore: repo reorg, lib profilling and much more
+ - feat: repo reorg
+ - wip: charts and result docs
+ - chore: pipeline
+ - wip: repo refactor - mocks & fakes
+ - wip: repo reorg
+ - wip: repo restructure
+ - wip: repo re-org
+ - wip: serailzier reorg
+ - wip:L binary serialzier performance improvements
+ - wip:L binary serialzier performance improvements
+ - feat: unsafe copy and grow removal
+ - wip: binary serialzier performance improvements
+ - wip: binary serializer code improvement
+ - wip: binary serializer slice encoder improvements
+ - wip: binary serializer slice encoder improvements
+ - wip: binary serializer slice encoder improvements
+ - wip: binary serializer slice encoder improvements
+ - wip: binary serializer slice encoder improvements
+ - wip: binary serializer slice encoder improvements
+ - feat: grain refinement
+ - feat: binary serializer improvements
  - chore: unsafe binary serializer rename to raw binary serialzier
- 
-# [v1.1.21]
- 
-# [v1.1.20]
  - Merge pull request 'feat/binary-serializer' - [#1] from feat/binary-serializer into main
  - [gitea/feat/binary-serializer] - feat: blazingly fucking freaking phenomenally fast binary serializer
  - feat: benchmarks
@@ -35,69 +52,29 @@
  - wip: binary serializer code cleanup deletion
  - wip: binary serializer code cleanup
  - wip: binary serializer
- 
-# [v1.1.19]
  - refactor: mock deps
- 
-# [v1.1.18]
  - chore: drone pipeline and validation
- 
-# [v1.1.17]
  - chore: drone pipeline and validation
- 
-# [v1.1.16]
  - feat: publish makefile command
  - chore: pipelines
- 
-# [v1.1.15]
  - chore: deps bump
- 
-# [v1.1.14]
  - chore: go mod version
- 
-# [v1.1.13]
  - feat: io benchmark
- 
-# [v1.1.12]
  - feat: added makefile commands
  - refactor: small code clean up
  - feat: added proto serializer
- 
-# [v1.1.11]
  - chore: drone-analysis
  - chore: vendor deps
  - refactor: pipelines
- 
-# [v1.1.10]
  - chore: repo updated
- 
-# [v1.1.9]
  - refactor: minor drone varialbe pipeline
- 
-# [v1.1.8]
  - refactor: minor pipeline repo issues
- 
-# [v1.1.7]
  - refactor: pipeline update
  - feat: drone pipeline checkpoint
- 
-# [v1.1.6]
  - feat: mocks
- 
-# [v1.1.4]
  - feat: pipelines
- 
-# [v1.1.3]
  - chore: fix mod and imports path
- 
-# [v1.1.2]
  - chore: mod path changed
- 
-# [v1.1.1]
  - refactor: standard pkg naming
- 
-# [v1.1.0]
  - feat: data rebind added to serializer interface
- 
-# [v1.0.0]
  - feat: data serializer
