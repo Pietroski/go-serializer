@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v0.0.1]
  - [gitlab/main, github/main, gitea/main, gitea/HEAD] - docs: readme
  - chore: repo reorg, lib profilling and much more
  - feat: repo reorg
