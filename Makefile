@@ -11,62 +11,61 @@
 
 ########################################################################################################################
 
+REPORT_DIR := tests/reports
+
 report-dir:
-	mkdir -p ./docs/reports/tests/unit/
+	mkdir -p $(REPORT_DIR)
 
-test-unit:
-	go test -race -v `go list ./... | grep -v ./pkg/mocks`
+test-unit: clean-test-cache
+	go test -race --tags=unit ./...
 
-test-unit-cover: report-dir
-	go test -race -v -coverprofile ./docs/reports/tests/unit/cover.out `go list ./... | grep -v ./pkg/mocks`
+test-bench: clean-test-cache
+	go test -race --tags=benchmark ./...
 
-test-unit-cover-silent: report-dir
-	go test -race -coverprofile ./docs/reports/tests/unit/cover.out `go list ./... | grep -v ./pkg/mocks`
+test-unit-cover: report-dir clean-test-cache
+	go test -race --tags=unit -coverprofile $(REPORT_DIR)/unit_cover.out ./...
 
-test-unit-cover-all: report-dir
-	go test -race -v -coverprofile ./docs/reports/tests/unit/cover-all.out ./...
+test-unit-cover-verbose: report-dir clean-test-cache
+	go test -race --tags=unit -v -coverprofile $(REPORT_DIR)/unit_cover.out ./...
 
-test-unit-cover-all-silent: report-dir
-	go test -race -coverprofile ./docs/reports/tests/unit/cover-all.out ./...
+test-unit-cover-report-view: report-dir clean-test-cache
+	go tool cover -html=$(REPORT_DIR)/unit_cover.out
 
-test-unit-cover-report: report-dir
-	go tool cover -html=docs/reports/tests/unit/cover.out
-
-test-unit-cover-all-report: report-dir
-	go tool cover -html=docs/reports/tests/unit/cover-all.out
+quick-test-cover:
+	go test -race --tags=unit -cover ./...
 
 ########################################################################################################################
 
+BENCH_DIR := tests/benchmarks/serializer/results/BenchmarkAll.log
+
 bench:
-	go test -bench BenchmarkAll -benchmem ./...
+	go test --tags=benchmark -bench BenchmarkAll -benchmem ./...
 
 bench-to-file:
-	go test -bench BenchmarkAll -benchmem ./... &> tests/benchmarks/serializer/results/BenchmarkAll.log
+	go test --tags=benchmark -bench BenchmarkAll -benchmem ./... &> $(BENCH_DIR)
 
 generate-bench-report:
-	go test -run TestParseBenchResults -v ./...
+	go test --tags=benchmark -run TestParseBenchResults -v ./...
 
 generate-full-bench-report:
 	echo 'implement me!'
 
 ########################################################################################################################
 
+clean-test-cache:
+	go clean -testcache
+
 clean-all-caches:
 	go clean -cache
 	go clean -modcache
 	go clean -testcache
-
-test: clean-all-caches
-	go test -race --tags=unit,test_validation -cover ./...
-
-quick-test:
-	go test -race --tags=unit,test_validation -cover ./...
 
 ########################################################################################################################
 
 ## generates mocks
 mock-generate:
 	go get go.uber.org/mock/mockgen
+	go get github.com/maxbrunsfeld/counterfeiter/v6
 	go mod vendor
 	go generate ./...
 	go mod tidy
@@ -107,7 +106,10 @@ gitea-push-main:
 gitlab-push-main:
 	git push gitlab main
 
-push-main-all: gitea-push-main gitlab-push-main
+github-push-main:
+	git push github main
+
+push-main-all: gitea-push-main gitlab-push-main github-push-main
 
 amend:
 	git commit --amend --no-edit
@@ -124,7 +126,10 @@ gitea-push-tags:
 gitlab-push-tags:
 	git push gitlab --tags
 
-push-tags: gitea-push-tags gitlab-push-tags
+github-push-tags:
+	git push github --tags
+
+push-tags: gitea-push-tags gitlab-push-tags github-push-tags
 
 publish:
 	make chore-version-bump

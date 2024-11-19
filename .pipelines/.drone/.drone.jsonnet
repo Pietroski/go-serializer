@@ -43,14 +43,10 @@ local tests(name, image, envs) = {
   commands: tests_cmd,
 };
 
-local gitlab_push = [
+local remote_push = [
   'git checkout -b release/merging-branch',
   'git remote add gitlab '+remote_gitlab_repo_address,
   'git push gitlab release/merging-branch -f',
-];
-
-local github_push = [
-  'git checkout -b release/merging-branch',
   'git remote add github '+remote_github_repo_address,
   'git push github release/merging-branch -f',
 ];
@@ -59,18 +55,14 @@ local remotePushStep(image, envs) = {
   name: 'remote-push',
   image: image,
   environment: envs,
-  commands: std.flattenArrays([set_netrc, gitlab_push, github_push]),
+  commands: std.flattenArrays([set_netrc, remote_push, github_push]),
 };
 
-local gitlab_tag = [
+local remote_tag = [
   'git remote add gitlab '+remote_gitlab_repo_address,
-  'make tag',
-  'git push gitlab --tags',
-];
-
-local github_tag = [
   'git remote add github '+remote_github_repo_address,
   'make tag',
+  'git push gitlab --tags',
   'git push github --tags',
 ];
 
@@ -78,7 +70,7 @@ local remoteTagStep(image, envs) = {
   name: 'remote-tag',
   image: image,
   environment: envs,
-  commands: std.flattenArrays([set_netrc, gitlab_tag, github_tag]),
+  commands: std.flattenArrays([set_netrc, remote_tag, github_tag]),
 };
 
 local whenCommitToNonMaster(step) = step {
