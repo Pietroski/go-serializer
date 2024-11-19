@@ -1,9 +1,13 @@
 # CHANGELOG
 
 # [UNRELEASED]
- 
-# [v0.0.1]
- - [gitlab/main, github/main, gitea/main, gitea/HEAD] - docs: readme
+ - tmp: version file reset
+ - [gitea/main, gitea/HEAD] - chore: drone pipeline
+ - fix: drone validate
+ - chore: makefile reorg
+ - chore: testing tag
+ - chore: drone github push steps
+ - docs: readme
  - chore: repo reorg, lib profilling and much more
  - feat: repo reorg
  - wip: charts and result docs
