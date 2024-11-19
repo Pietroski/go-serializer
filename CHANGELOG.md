@@ -1,6 +1,8 @@
 # CHANGELOG
 
 # [UNRELEASED]
+ 
+# [v0.0.1]
  - tmp: version file reset
  - [gitea/main, gitea/HEAD] - chore: drone pipeline
  - fix: drone validate
