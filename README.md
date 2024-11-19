@@ -55,6 +55,8 @@ The benchmark results with the Gob serializer were omitted because of its horrib
 still be found
 here [tests/benchmarks/serializer/results/with_gob/index.html](./tests/benchmarks/serializer/results/with_gob/index.html)
 
+The charts can also be seen at -> https://go-serializer-benchmarks.tiiny.site/
+
 ### General benchmark tips and hints on profiling
 
 Ways to benchmark you application

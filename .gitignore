@@ -8,3 +8,5 @@
 # report files
 # drone-analysis
 # drone-analysis.json
+
+.DS_Store
