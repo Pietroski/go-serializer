@@ -47,8 +47,8 @@ local remote_push = [
   'git checkout -b release/merging-branch',
   'git remote add gitlab '+remote_gitlab_repo_address,
   'git push gitlab release/merging-branch -f',
-  'git remote add github '+remote_github_repo_address,
-  'git push github release/merging-branch -f',
+//  'git remote add github '+remote_github_repo_address,
+//  'git push github release/merging-branch -f',
 ];
 
 local remotePushStep(image, envs) = {
@@ -59,11 +59,11 @@ local remotePushStep(image, envs) = {
 };
 
 local remote_tag = [
-  'git remote add gitlab '+remote_gitlab_repo_address,
-  'git remote add github '+remote_github_repo_address,
   'make tag',
+  'git remote add gitlab '+remote_gitlab_repo_address,
   'git push gitlab --tags',
-  'git push github --tags',
+//  'git remote add github '+remote_github_repo_address,
+//  'git push github --tags',
 ];
 
 local remoteTagStep(image, envs) = {

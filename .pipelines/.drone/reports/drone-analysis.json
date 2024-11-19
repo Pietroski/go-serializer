@@ -87,9 +87,7 @@
         "chmod 640 ~/.netrc",
         "git checkout -b release/merging-branch",
         "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer",
-        "git push gitlab release/merging-branch -f",
-        "git remote add github https://github.com/Pietroski/go-serializer",
-        "git push github release/merging-branch -f"
+        "git push gitlab release/merging-branch -f"
       ],
       "environment": {
         "GITHUB_ACCESS_TOKEN": {
@@ -160,11 +158,9 @@
         "echo -e \"\n\" >> ~/.netrc",
         "echo -e \"machine gitlab.com\nlogin $${GITHUB_USERNAME}\npassword $${GITHUB_ACCESS_TOKEN}\" >> ~/.netrc",
         "chmod 640 ~/.netrc",
-        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer",
-        "git remote add github https://github.com/Pietroski/go-serializer",
         "make tag",
-        "git push gitlab --tags",
-        "git push github --tags"
+        "git remote add gitlab https://gitlab.com/pietroski-software-company/devex/golang/serializer",
+        "git push gitlab --tags"
       ],
       "environment": {
         "GITHUB_ACCESS_TOKEN": {
