@@ -55,7 +55,7 @@ local remotePushStep(image, envs) = {
   name: 'remote-push',
   image: image,
   environment: envs,
-  commands: std.flattenArrays([set_netrc, remote_push, github_push]),
+  commands: std.flattenArrays([set_netrc, remote_push]),
 };
 
 local remote_tag = [
@@ -70,7 +70,7 @@ local remoteTagStep(image, envs) = {
   name: 'remote-tag',
   image: image,
   environment: envs,
-  commands: std.flattenArrays([set_netrc, remote_tag, github_tag]),
+  commands: std.flattenArrays([set_netrc, remote_tag]),
 };
 
 local whenCommitToNonMaster(step) = step {
